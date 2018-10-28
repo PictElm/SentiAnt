@@ -55,3 +55,28 @@ It can:
 + Do nothing.
 
 Whatever it does, it can also edit the value of the pheromone (see paragraph below) at its position.
+
+---
+
+## Resources
+
+The ants can find resources, initially uniformly distributed over the map. When one of these resources is brought to the queen, she can use it to bring up a new unit. When the resource is used, it is returned randomly to the map. A tile can only accommodate one resource.
+
+## Pheromones
+
+Pheromones are stored as integers associated to a position in the grid. It can take a value from 0 to 15.
+When an ant applies a pheromone to its position during its computation turn, any previous pheromone is totally overridden.
+The odor released by a pheromone have an initial range of 5 cells: below is represented a pheromone which has lost 2 rank in range. The smell carries beyond walls and rocks. A pheromone disappears gradually each time an ant passes over it and its range decreases by 1 rank.
+
+When an ant is in range of a pheromone (green zone), it is added to the list of perceived pheromones.
+
+This list contains the integer identifying the pheromone itself, as well as its position, relative to the ant that perceives it. It is part of the input parameters of the ant algorithm.
+
+<img src="https://github.com/PictElm/SentiAnt/raw/master/images/example_pheromone.png" width="250">
+(The scope of the smell of the pheromone in the center has decreased by 2: where it is, the ant can not detect it.)
+
+---
+
+## Introduction to `access.py`
+
+404 - not done yet :)
