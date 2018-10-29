@@ -16,6 +16,7 @@ The nests begins with only their respective queen (fixed unit occupying two cell
 <img src="https://github.com/PictElm/SentiAnt/raw/master/images/example_queen.png" width="250">
 
 In the center: a queen with 8 adjacent resources by default.
+
 In the top left: 5 rocks that can not be dug through.
 
 ## End of the game
