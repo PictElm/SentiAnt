@@ -1,7 +1,8 @@
 import os
 import sys
 
-from sentiant.core import World, Nest, Queen, access
+from sentiant.core import World, access, graph
+from sentiant.parts import Queen
 
 
 def load(dirname):
@@ -31,11 +32,9 @@ def load(dirname):
     return r
 
 def start(registered, turnsLimit=10):
-    world = World()
-
     for main in registered:
         s = world.settings['worldSize']
-        x, y = s // 2, s // 2 #access.RNG.randrange(s), access.RNG.randrange(s)
+        x, y = access.RNG.randrange(s), access.RNG.randrange(s)
         world.addNest(Queen(x, y, main[0], main[1]).nest)
 
     finished = False
@@ -43,15 +42,22 @@ def start(registered, turnsLimit=10):
 
     seq = access.seqstart("game")
 
+    access.info("Starting GUI")
+    graph.start()
+
     while not finished and counter < turnsLimit:
         subseq = access.seqstart("turn" + str(counter), under=seq)
         world.turn()
+        graph.update()
         access.seqend(subseq)
 
         counter+= 1
 
+    graph.end()
+    access.seqend(seq)
+
+    access.info("Simulation returned.")
 
 if __name__ == '__main__':
-    start(load(sys.argv[1] if 1 < len(sys.argv) \
-          else os.curdir + "/sentiant/player/"))
-    #start(load(os.curdir + "/sentiant/player/"))
+    world = World()
+    start(load(world.settings['playersDirectory']))
