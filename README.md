@@ -33,6 +33,7 @@ It can then at each turn, for one of the 4 adjacent tiles (N / S / E / W):
 + move to it if the tile is not a wall,
 + dig it if it’s one, and it’s not a rock (in which case it doesn’t move),
 + attack an adjacent ant;
+
 For his own tile:
 + pick up a resource on the ground,
 + drop a resource on the ground.
