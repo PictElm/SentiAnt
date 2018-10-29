@@ -1,3 +1,4 @@
+
 # SentiAnt
 
 ## Overview
@@ -13,8 +14,8 @@ The map consists of a grid of N by N (more than 60 by 60) in which ants evolve. 
 The nests begins with only their respective queen (fixed unit occupying two cells allowing the production of mobile units) and 8 resources. Initially, the map is fully obstructed by walls "digable" (commun underground) or not (rocks), with the exception of the areas around each queens.
 
 <img src="https://github.com/PictElm/SentiAnt/raw/master/images/example_queen.png" width="250">
-In the center: a queen with 8 adjacent resources by default.
 
+In the center: a queen with 8 adjacent resources by default.
 In the top left: 5 rocks that can not be dug through.
 
 ## End of the game
@@ -30,11 +31,13 @@ When the designer creates a mobile unit, he uses a resource and must assign his 
 Each of these ants receives, at the beginning of the calculation round, a grid of the 7 by 7 visible squares (or not, see example below), as well as the list of positions, relative to its own, of the pheromones on the map.
 
 It can then at each turn, for one of the 4 adjacent tiles (N / S / E / W):
+
 + move to it if the tile is not a wall,
 + dig it if it’s one, and it’s not a rock (in which case it doesn’t move),
 + attack an adjacent ant;
 
 For his own tile:
+
 + pick up a resource on the ground,
 + drop a resource on the ground.
 
@@ -45,12 +48,15 @@ When the ant carries a resource, only the first and last option are available (m
 All ants shares the same characteristics especially to attack and take hits: a unit is destroyed in 2 shots. A destroyed unit drops its resource if it was carrying one.
 
 <img src="https://github.com/PictElm/SentiAnt/raw/master/images/example_random.png" width="250">
+
 For example, in the following situation:
-+ The shaded areas are not readable: they take the value 'UNKNOWN' if the algorithm tries to access them;
+
++ The shaded areas are not readable: they take the value `UNKNOWN` if your algorithm tries to access them;
 + The ants can not dig to its right (E) because of the rock;
-+ Bottom right is a pheromone (see below).
++ Bottom right is a pheromone (see after).
 
 It can:
+
 + Dig in ahead (N) and on the left (W), it will stay on the same place;
 + Pick up the resource on its tile, except it will not be able to dig on the next turn;
 + Do nothing.
@@ -74,6 +80,7 @@ When an ant is in range of a pheromone (green zone), it is added to the list of 
 This list contains the integer identifying the pheromone itself, as well as its position, relative to the ant that perceives it. It is part of the input parameters of the ant algorithm.
 
 <img src="https://github.com/PictElm/SentiAnt/raw/master/images/example_pheromone.png" width="250">
+
 (The scope of the smell of the pheromone in the center has decreased by 2: where it is, the ant can not detect it.)
 
 ---
