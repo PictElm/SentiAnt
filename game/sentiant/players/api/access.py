@@ -1,10 +1,11 @@
 from random import Random
+from time import time
 
-seed = 9876543210
+seed = time()
 RNG = Random(seed)
 
 
-NOT_FOUND     = -1 ^ 1
+NOT_FOUND     = -1
 
 NORTH         = 1
 SOUTH         = NORTH << 1
@@ -23,13 +24,25 @@ REFRESH_PHERO = WAIT << 1
 KEEP_PHERO    = REFRESH_PHERO << 1
 
 WALL          = KEEP_PHERO << 1
-DIGGABLE      = WALL << 1
-UNKNOWN       = DIGGABLE << 1
+ROCK          = WALL << 1
+UNKNOWN       = ROCK << 1
 
-EMPTY         = ~WALL
+ANT_ON_TILE   = UNKNOWN << 1
+RES_ON_TILE   = ANT_ON_TILE << 1
+
+EMPTY         = 0
 
 
 settings = {}
+
+def loadSettings(configFile="sentiant/settings.config"):
+    if settings:
+        return
+
+    for it in open(configFile).readlines():
+        if ':' in it:
+            k, v = it.strip().replace(' ', '').split(':')
+            settings.update({ k: int(v) if v.isnumeric() else v })
 
 
 class AQueen:
@@ -40,8 +53,8 @@ class AQueen:
 
 class AAnt:
     def __init__(self, ant):
-        self.x = world.settings['viewDistance'] // 2
-        self.y = world.settings['viewDistance'] // 2
+        self.x = settings['viewDistance'] // 2
+        self.y = settings['viewDistance'] // 2
         self.run = ant.run
         self.color = ant.nest.color
         self.isHurt = ant.isHurt
@@ -50,58 +63,69 @@ class AAnt:
 
 class APhero:
     def __init__(self, phero, relateAnt):
-        self.x = phero.x - relateAnt.x + world.settings['viewDistance'] // 2
-        self.y = phero.y - relateAnt.x + world.settings['viewDistance'] // 2
+        self.x = phero.x - relateAnt.x + settings['viewDistance'] // 2
+        self.y = phero.y - relateAnt.x + settings['viewDistance'] // 2
         self.value = phero.value
         self.decay = phero.decay
 
 
-seqT = {}
-seqN = []
+class AView:
+    def __init__(self, view):
+        self.view = view
+        self.size = len(view)
+
+    def __getitem__(self, xy):
+        x, y = xy
+        return self.view[self.size // 2 + x][self.size // 2 + y]
+
+seqname = {}
+seqlast = []
 
 def stdout(s, end="\n", start="", seq=False):
     print(start, end=" ")
-    if seq and seqN:
-        seq = seqN[seq if seq in range(len(seqN)) else -1]
+
+    if seq and seqlast:
+        seq = seqname[seq if seq in seqname.keys() else seqlast[-1]]
         print("<" + seq + "> ", end="")
-        #(" <" + seq + ">" + "\t" * seqT[seq], end="")
+
     print(s, end=end)
 
 def info(s, seq=True):
-    stdout(s, end="\n", start="[info]", seq=seq)
+    stdout(s, start="[Info]", seq=seq)
 
 def warning(s, seq=True):
-    stdout(s, end="\n", start="[warn]", seq=seq)
+    stdout(s, start="[Warn]", seq=seq)
 
 def error(s, seq=True):
-    stdout(s, end="\n", start="[err!]", seq=seq)
+    stdout(s, start="[Rror]", seq=seq)
 
 def debug(s, seq=True):
-    stdout(s, end="\n", start="[heya]", seq=seq)
+    stdout(s, start="[Dbug]", seq=seq)
 
 def newline():
     stdout("")
 
-def seqstart(name, under=""):
-    t = 1
-    if under != "":
-        if type(under) == int and under in range(len(seqN)):
-            under = seqN[under]
-        t+= seqT[under] if under in seqT.keys() else under.count('.')
-        under+= "."
+def seqstart(name, under=''):
+    if under != '':
+        if under in seqname.keys():
+            under = seqname[under]
+        under+= '.'
 
-    seqN.append(under + name)
-    seqT.update({ seqN[-1]: t })
+    seqlast.append(1 if len(seqlast) < 1 else seqlast[-1] + 1)
+    seqname.update({ seqlast[-1]: under + name })
 
-    newline()
-    info("started;", seq=seqN[-1])
+    #newline()
+    info("started;", seq=seqlast[-1])
 
-    return len(seqN) - 1
+    return seqlast[-1]
 
 def seqend(seq=-1):
-    info("ended.\n", seq=seqN[seq])
+    seq = seq if seq in seqname.keys() else seqlast[-1]
 
-    name = seqN.pop(seq)
-    seqT.pop(name)
+    info("ended.", seq=seq)
+    newline()
 
-    return name
+    seqlast.remove(seq)
+    name = seqname.pop(seq)
+
+    return seqname

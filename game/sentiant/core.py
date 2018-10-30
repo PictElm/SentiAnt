@@ -1,43 +1,52 @@
 import sentiant.players.api.access as access
 import sentiant.graph as graph
+from sentiant.parts import Ant, Phero
 
 
 class World:
-    def __init__(self, configFile="sentiant/settings.config"):
-        self.settings = {}
-
-        for it in open(configFile).readlines():
-            k, v = it.strip().replace(' ', '').split(':')
-            self.settings.update({ k: int(v) if v.isnumeric() else v })
-        access.settings.update(self.settings)
+    def __init__(self):
 
         self.nests = []
         self.pheros = []
 
-        s = self.settings['worldSize']
+        s = access.settings['worldSize']
         self.antT = [[False for k in range(s)] for k in range(s)]
         self.resT = [[False for k in range(s)] for k in range(s)]
         self.mapT = [[access.WALL for k in range(s)] for k in range(s)]
 
-        r = self.settings['rocksPercent']
-        for k in range(int(s * s * r / 100)):
-            self[self.mapT, access.RNG.randrange(s), access.RNG.randrange(s)]
+    def generate(self):
+        s = access.settings['worldSize']
 
-        a = self.settings['resAmount']
+        p = access.settings['rocksPercent']
+        for k in range(int(s * s * p / 100.)):
+            i, j = access.RNG.randrange(s), access.RNG.randrange(s)
+            self[self.mapT, i, j]|= access.ROCK
+
+        a = access.settings['resAmount']
         for k in range(a):
             i, j = access.RNG.randrange(s), access.RNG.randrange(s)
             while self[self.resT, i, j]:
                 i, j = access.RNG.randrange(s), access.RNG.randrange(s)
-            self[self.resT, i, j]
+            self[self.resT, i, j] = True
+            self[self.mapT, i, j]^= access.ROCK
+
+        return self
 
     def addNest(self, nest):
         for i in range(-3, 5):
             for j in range(-3, 5):
-                if abs(i-1) + abs(j-1) < 5:
+                if abs(i-.5) + abs(j-.5) < 5:
                     self[self.mapT, nest.queen.x + i, nest.queen.y + j] = access.EMPTY
 
         for i, j in nest.queen.around:
             self[self.resT, nest.queen.x + i, nest.queen.y + j] = True
+
+        for i in range(2):
+            for j in range(2):
+                self[self.mapT, nest.queen.x + i, nest.queen.y + j]|= access.ROCK
+                self[self.antT, nest.queen.x + i, nest.queen.y + j] = True
+
+        graph.drawQueen(nest.queen.x, nest.queen.y)
 
         self.nests.append(nest)
 
@@ -45,7 +54,7 @@ class World:
         return self[self.antT, x, y]
 
     def coords(self, x, y):
-        s = self.settings['worldSize']
+        s = access.settings['worldSize']
         if not x in range(s) or not y in range(s):
             return x % s, y % s
         return x, y
@@ -57,10 +66,17 @@ class World:
 
         flags = graph.EMPTY
 
-        flags|= graph.ANT if self.antT[x][y] else 0
-        flags|= graph.RES if self.resT[x][y] else 0
-        flags|= graph.WALL if self.mapT[x][y] & access.WALL else 0
-        flags|= graph.ROCK if not self.mapT[x][y] & access.DIGGABLE else 0
+        if self.antT[x][y]:
+            flags|= graph.ANT
+
+        if self.resT[x][y]:
+            flags|= graph.RES
+
+        if self.mapT[x][y] & access.WALL:
+            flags|= graph.WALL
+
+        if self.mapT[x][y] & access.ROCK and not self.antT[x][y]:
+            flags|= graph.ROCK
 
         graph.updateTile(x, y, flags)
 
@@ -68,6 +84,9 @@ class World:
         T, x, y = Txy
         x, y = self.coords(x, y)
         return T[x][y]
+
+    def isFinished(self):
+        return False
 
     def turn(self):
         for nest in self.nests:
@@ -77,11 +96,20 @@ class World:
 
             if action != access.WAIT:
                 posX, posY, cb = action
+                posX+= queen.x
+                posY+= queen.y
 
-                if self[self.resT, posX, posY] == False:
+                if self[self.resT, posX, posY] == True:
                     nest.ants.append(Ant(posX, posY, nest, cb))
+
                     self[self.resT, posX, posY] = False
                     self[self.antT, posX, posY] = True
+
+                    s = access.settings['worldSize']
+                    i, j = access.RNG.randrange(s), access.RNG.randrange(s)
+                    while self[self.resT, i, j]:
+                        i, j = access.RNG.randrange(s), access.RNG.randrange(s)
+                    self[self.resT, i, j] = True
 
         beeings = sum([n.ants for n in self.nests], [])
         access.RNG.shuffle(beeings)
@@ -90,12 +118,14 @@ class World:
         toHurt = []
 
         for ant in beeings:
-            map, pheros, onPos = ant.createInput(self)
-            action, value = ant.run(access.AAnt(ant), map, pheros)
+            map, phL, onPos = ant.createInput(self)
+            action, value = ant.run(access.AAnt(ant), access.AView(map), phL)
 
             # pheromone processing
-            if value == access.REFRESH_PHERO and isinstance(onPos, Phero):
-                onPos.decay = 0
+            if isinstance(onPos, Phero):
+                onPos.decay-= 1
+                if value == access.REFRESH_PHERO:
+                    onPos.decay = 0
             elif value != access.KEEP_PHERO and value in range(16):
                 self.pheros.append(Phero(ant.x, ant.y, value))
 
@@ -128,7 +158,7 @@ class World:
                     dest = (ant.x - 1, ant.y)
                     
                 if dest and not self[self.antT, dest[0], dest[1]] \
-                   and not self[self.mapT, dest[0], dest[1]] & WALL:
+                   and not self[self.mapT, dest[0], dest[1]] & access.WALL:
                     toMove.append((ant, dest[0], dest[1]))
                     self[self.antT, dest[0], dest[1]] = ant
 
@@ -154,7 +184,7 @@ class World:
                 elif action & access.WEAST:
                     dest = (ant.x - 1, ant.y)
 
-                if dest and self[self.mapT, dest[0], dest[1]] & access.DIGGABLE \
+                if dest and not self[self.mapT, dest[0], dest[1]] & access.ROCK \
                    and self[self.mapT, dest[0], dest[1]] & access.WALL:
                     self[self.mapT, dest[0], dest[1]]^= access.WALL
 

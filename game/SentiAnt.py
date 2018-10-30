@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 
 from sentiant.core import World, access, graph
 from sentiant.parts import Queen
@@ -31,33 +32,40 @@ def load(dirname):
     os.chdir(prev)
     return r
 
-def start(registered, turnsLimit=10):
+def start(registered):
     for main in registered:
-        s = world.settings['worldSize']
+        s = access.settings['worldSize']
         x, y = access.RNG.randrange(s), access.RNG.randrange(s)
         world.addNest(Queen(x, y, main[0], main[1]).nest)
 
-    finished = False
-    counter = 0
+    loop.mainseq = access.seqstart("game")
+    loop.counter = 0
 
-    seq = access.seqstart("game")
+    access.info("Starting GUI.")
+    graph.start(loop)
 
-    access.info("Starting GUI")
-    graph.start()
+def loop():
+    subseq = access.seqstart("turn" + str(loop.counter), under=loop.mainseq)
 
-    while not finished and counter < turnsLimit:
-        subseq = access.seqstart("turn" + str(counter), under=seq)
-        world.turn()
-        graph.update()
-        access.seqend(subseq)
+    world.turn()
+    graph.update(end if test(world.isFinished()) else loop)
 
-        counter+= 1
+    access.seqend(subseq)
 
+def test(finished):
+    loop.counter+= 1
+    return finished or access.settings['turnsLimit'] < loop.counter + 1
+
+def end():
     graph.end()
-    access.seqend(seq)
+    access.seqend(loop.mainseq)
 
-    access.info("Simulation returned.")
+    access.info("Simulation returns.")
 
 if __name__ == '__main__':
-    world = World()
-    start(load(world.settings['playersDirectory']))
+    access.loadSettings()
+    graph.load()
+
+    world = World().generate()
+
+    start(load(access.settings['playersDirectory']))

@@ -18,7 +18,7 @@ class Queen:
         self.run = callback
         self.nest = Nest(self, color)
         self.around = [(-1, +0), (-1, +1), (+0, -1), (+0, +2),
-                       (+1, -1), (+1, +2), (+2, +0), (+2, +0) ]
+                       (+1, -1), (+1, +2), (+2, +0), (+2, +1) ]
 
     def createInput(self, world):
         """ Create list of ressources availables around the queen
@@ -55,7 +55,7 @@ class Ant:
     def createInput(self, world):
         """ Crops map and selects pheromones to input
         """
-        s = world.settings['viewDistance']
+        s = access.settings['viewDistance']
         hs = s // 2
 
         rMap = [[~access.UNKNOWN for k in range(s)] for k in range(s)]
@@ -81,9 +81,17 @@ class Ant:
                 
                 bla = False
                 for k in range(l + 1):
-                    tile = world[world.mapT, int(self.x + k*u), int(self.y + k*v)]
-                    if rMap[int(hsz + k*u)][int(hsz + k*v)] == ~access.UNKNOWN:
-                        rMap[int(hsz + k*u)][int(hsz + k*v)] = access.UNKNOWN \
+                    a, b = int(self.x + k*u), int(self.y + k*v)
+                    tile = world[world.mapT, a, b]
+
+                    if world[world.antT, a, b]:
+                        tile|= access.ANT_ON_TILE
+
+                    if world[world.resT, a, b]:
+                        tile|= access.RES_ON_TILE
+
+                    if rMap[int(hs + k*u)][int(hs + k*v)] == ~access.UNKNOWN:
+                        rMap[int(hs + k*u)][int(hs + k*v)] = access.UNKNOWN \
                                                                if bla else tile
                     bla|= tile & access.WALL
 
