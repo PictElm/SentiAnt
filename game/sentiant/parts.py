@@ -50,7 +50,8 @@ class Queen:
                 rPheros.append(access.APhero(ph, self))
 
         # creating list of available resources around
-        rRes = [(x, y, world[world.resT, self.x+x, self.y+y]) for x,y in self.around]
+        rRes = [(x, y, world[world.resT, self.x+x, self.y+y] and not \
+                world[world.antT, self.x+x, self.y+y]) for x,y in self.around]
 
         return rRes, rPheros
 

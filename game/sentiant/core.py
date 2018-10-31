@@ -21,7 +21,6 @@ from sentiant.parts import Ant, Phero
 
 class World:
     def __init__(self):
-
         self.nests = []
         self.pheros = []
 
@@ -110,7 +109,8 @@ class World:
             resPos, pheros = queen.createInput(self)
             action = queen.run(access.AQueen(queen), resPos, pheros)
 
-            if action != access.WAIT:
+            if action != access.WAIT and isinstance(action, tuple) \
+                                         or isinstance(action, list):
                 posX, posY, cb = action
                 posX+= queen.x
                 posY+= queen.y
