@@ -71,12 +71,12 @@ def loadSettings(configFile="sentiant/settings.config"):
         return
 
     for it in open(configFile).readlines():
-        if it[0] not in (';', '#'):
+        if it[0] not in (';', '#', '\n'):
             k, v = it.strip().replace(' ', '').split(':')
             settings.update({ k: int(v) if v.isnumeric() else v })
 
-    if 'randomSeed' not in settings.keys:
-        settings['randomSeed'] = time()
+    if 'randomSeed' not in settings.keys():
+        settings['randomSeed'] = int(time())
     RNG.seed(settings['randomSeed'])
     RNG.seed = lambda *x: warning("You's not supposed to do that!") # trying...
 
@@ -134,6 +134,7 @@ class AView:
     def __init__(self, view):
         self.view = view
         self.size = len(view)
+        self.range = range(-self.size // 2, self.size // 2)
 
     def __getitem__(self, xy):
         x, y = xy
@@ -141,6 +142,9 @@ class AView:
 
     def __iter__(self):
         return iter(self.view)
+
+    def __len__(self):
+        return self.size
 
 
 seqname = {}

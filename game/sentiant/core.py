@@ -57,7 +57,7 @@ class World:
         for i, j in nest.queen.around:
             self[self.resT, nest.queen.x + i, nest.queen.y + j] = True
 
-        for i in range(2):
+        for i in range(2):              # ?? TODO/TOREDO?
             for j in range(2):
                 self[self.mapT, nest.queen.x+i, nest.queen.y+j]|= access.ROCK
                 self[self.antT, nest.queen.x+i, nest.queen.y+j] = True
@@ -135,10 +135,6 @@ class World:
         toHurt = []
 
         for ant in beeings:
-            ant.x, ant.y = self.coords(ant.x, ant.y)
-            ant.wasHurt = ant.isHurt
-            ant.age+= 1
-
             map, phL, onPos = ant.createInput(self)
             action, value = ant.run(access.AAnt(ant), access.AView(map), phL)
 
@@ -151,7 +147,7 @@ class World:
                 self.pheros.append(Phero(ant.x, ant.y, value))
 
             # action processing
-            if action & access.ATTACK_ON:
+            if action & access.ATTACK_ON and not ant.isCarrying:
                 target = None
                 
                 if action & access.NORTH:
@@ -166,7 +162,7 @@ class World:
                 if target and target != access.NOT_FOUND:
                     toHurt.append(target)
                     
-            elif action & access.MOVE_TO:
+            elif action & access.MOVE_TO and not ant.isCarrying:
                 dest = None
                 
                 if action & access.NORTH:
@@ -185,6 +181,7 @@ class World:
 
             elif action & access.TAKE_RES and not ant.isCarrying \
                  and self[self.resT, ant.x, ant.y]:
+                access.debug("Accessing resource at {}, {}".format(ant.x, ant.y))
                 self[self.resT, ant.x, ant.y] = False
                 ant.isCarrying = True
 
@@ -193,7 +190,7 @@ class World:
                 self[self.resT, ant.x, ant.y] = True
                 ant.isCarrying = False
 
-            elif action & access.DIG_AT:
+            elif action & access.DIG_AT and not ant.isCarrying:
                 dest = None
                 
                 if action & access.NORTH:
@@ -208,6 +205,11 @@ class World:
                 if dest and not self[self.mapT,dest[0],dest[1]] & access.ROCK \
                    and self[self.mapT, dest[0], dest[1]] & access.WALL:
                     self[self.mapT, dest[0], dest[1]]^= access.WALL
+
+            # others
+            ant.x, ant.y = self.coords(ant.x, ant.y)
+            ant.wasHurt = ant.isHurt
+            ant.age+= 1
 
         for ant in toHurt:
             if ant.isHurt:

@@ -26,7 +26,7 @@ def main(queen, resources, pheromonesList):
 
     _.info("trying to spawn an `antRandom` somewhere...")
 
-    for x, y, available in ressources:
+    for x, y, available in resources:
         if available:
             # We found a usable resource!
             _.debug("selected resource at {}, {} from me".format(x, y))
@@ -43,13 +43,14 @@ def main(queen, resources, pheromonesList):
     _.seqend(mainseq)
     return r
 
+
 def antRandom(self, view, pheromonesList):
     """ This is a simple example of function in compliance with what an ant
         needs to run.
 
         ## Arguments:
-        + self: a `access.AAnt` instance;
-        + view: a part of the world maps, of size `settings: viewDistance`
+        + `self`: a `access.AAnt` instance;
+        + `view`: a part of the world maps, of size `settings: viewDistance`
             centred on the ant (this is an instance of `access.AView`);
         + `pheromonesList`: a list of `APhero` spoted from the tiles the
             ant occupies.
@@ -66,11 +67,12 @@ def antRandom(self, view, pheromonesList):
         As the 3 following actions take place on the same tile as the ant, no
         direction is required:
 
-        + pick up a resource on the ground (if not carrying): `access.TAKE_RES`;
         + drop a resource on the ground (if carrying): `access.DROP_RES`;
-        + do nothing: `access.WAIT` or anything invalid.
+        + pick up a resource on the ground (if not): `access.TAKE_RES`;
+        + do nothing: `access.WAIT` (or anything unexpected -- again, prefer
+            using `access.WAIT` to idle).
     """
-    _.debug("What do I do" + "with this!?" if self.isCarrying else "?!")
+    _.debug("What do I do" + (" with this!?" if self.isCarrying else "?!"))
 
     action = _.WAIT
 
@@ -81,11 +83,38 @@ def antRandom(self, view, pheromonesList):
     else:
         # .. otherwise, we move somwhere randomly...
         direction = [_.NORTH, _.SOUTH, _.EAST, _.WEAST][_.RNG.randrange(4)]
-        # (note that if we cant move there because of a wall, we waste the turn
-        #  doing nothing!)
-        action = _.MOVE_TO | direction
+
+        # If we cant move there because of a wall, we waste the turn!
+        isWall = False
+        if direction == _.NORTH and _.WALL & view[0, 1]:
+            isWall = True
+        elif direction == _.SOUTH and _.WALL & view[0, -1]:
+            isWall = True
+        elif direction == _.EAST and _.WALL & view[1, 0]:
+            isWall = True
+        elif direction == _.WEAST and _.WALL & view[-1, 0]:
+            isWall = True
+
+        action = (_.DIG_AT if isWall else _.MOVE_TO) | direction
 
     # This is to not affect a pheromone that would be on our tile.
     phero = _.KEEP_PHERO
+
+    # Let's say we use the pheromone 0 to locate the spawn points.
+    if self.age == 0:
+        _.debug("Marking spawn...")
+        phero = 0
+
+    for ph in pheromonesList:
+        # If the pheromone on our tile indicate a spawn point, ..
+        if ph.x == 0 and ph.y == 0 and ph.value == 0:
+            # .. we refresh it.
+            _.debug("Refreshing spawn...")
+            phero = _.REFRESH_PHERO
+
+            # We may as well try to replenish the stocks.
+            if self.isCarrying and not _.RES_ON_TILE & view[0, 0]:
+                _.info("There! I got you a cookie!")
+                action = _.DROP_RES
 
     return action, phero

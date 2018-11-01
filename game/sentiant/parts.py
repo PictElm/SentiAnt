@@ -125,6 +125,8 @@ class Phero:
         self.y = posY
         self.value = value
 
-    def isInRange(posX, posY):
-        x, y = world.coords(posX - self.x, posY - self.y)
-        return x + y < access.settings['pheroRange'] - self.decay
+    def isInRange(self, posX, posY):
+        s = access.settings['worldSize']
+        a = min(abs(posX - self.x), abs(posX - s - self.x))
+        b = min(abs(posY - self.y), abs(posY - s - self.y))
+        return abs(a) + abs(b) < access.settings['pheroRange'] - self.decay

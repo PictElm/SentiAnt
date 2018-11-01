@@ -37,7 +37,7 @@ def load(dirname):
     seq = access.seqstart("loading")
 
     for filename in os.listdir():
-        if '.py' in filename or '.pyc' in filename:
+        if filename[-3:] == '.py' or filename[-4:] in ('.pyc', '.pyw'):
             name = filename[:-3]
             subseq = access.seqstart(name, under=seq)
 
