@@ -51,15 +51,16 @@ class World:
         for i in range(-3, 5):
             for j in range(-3, 5):
                 if abs(i-.5) + abs(j-.5) < 5:
-                    self[self.mapT, nest.queen.x + i, nest.queen.y + j] = access.EMPTY
+                    self[self.mapT, nest.queen.x + i, nest.queen.y + j] = \
+                                                                   access.EMPTY
 
         for i, j in nest.queen.around:
             self[self.resT, nest.queen.x + i, nest.queen.y + j] = True
 
         for i in range(2):
             for j in range(2):
-                self[self.mapT, nest.queen.x + i, nest.queen.y + j]|= access.ROCK
-                self[self.antT, nest.queen.x + i, nest.queen.y + j] = True
+                self[self.mapT, nest.queen.x+i, nest.queen.y+j]|= access.ROCK
+                self[self.antT, nest.queen.x+i, nest.queen.y+j] = True
 
         graph.drawQueen(nest.queen.x, nest.queen.y)
 
@@ -134,6 +135,10 @@ class World:
         toHurt = []
 
         for ant in beeings:
+            ant.x, ant.y = self.coords(ant.x, ant.y)
+            ant.wasHurt = ant.isHurt
+            ant.age+= 1
+
             map, phL, onPos = ant.createInput(self)
             action, value = ant.run(access.AAnt(ant), access.AView(map), phL)
 
@@ -200,7 +205,7 @@ class World:
                 elif action & access.WEAST:
                     dest = (ant.x - 1, ant.y)
 
-                if dest and not self[self.mapT, dest[0], dest[1]] & access.ROCK \
+                if dest and not self[self.mapT,dest[0],dest[1]] & access.ROCK \
                    and self[self.mapT, dest[0], dest[1]] & access.WALL:
                     self[self.mapT, dest[0], dest[1]]^= access.WALL
 

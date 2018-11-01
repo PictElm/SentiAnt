@@ -64,7 +64,9 @@ class Ant:
         self.x = posX
         self.y = posY
         self.isHurt = False
+        self.wasHurt = False
         self.isCarrying = False
+        self.age = 0
 
     def __bool__(self):
         return True

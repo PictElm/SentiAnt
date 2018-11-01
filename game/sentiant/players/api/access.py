@@ -96,8 +96,8 @@ class AAnt:
         + `run`: the same function you using;
         + `color`: you color... (althrough don't expect this to stick around in
             futues versions!);
-        + `isHurt`: weather you've been hurt once and are about to die;
-        + `isCarrying`: weather you's carrying -the game- a resource.
+        + `isHurt`: whether you've been hurt once and are about to die;
+        + `isCarrying`: whether you's carrying -the game- a resource.
     """
     def __init__(self, ant):
         self.x = settings['viewDistance'] // 2
@@ -105,7 +105,9 @@ class AAnt:
         self.run = ant.run
         self.color = ant.nest.color
         self.isHurt = ant.isHurt
+        self.wasHurt = ant.wasHurt
         self.isCarrying = ant.isCarrying
+        self.age = ant.age
 
 
 class APhero:
@@ -136,6 +138,9 @@ class AView:
     def __getitem__(self, xy):
         x, y = xy
         return self.view[self.size // 2 + x][self.size // 2 + y]
+
+    def __iter__(self):
+        return iter(self.view)
 
 
 seqname = {}
