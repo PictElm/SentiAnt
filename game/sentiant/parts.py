@@ -35,6 +35,7 @@ class Queen:
         self.nest = Nest(self, color)
         self.around = [(-1, +0), (-1, +1), (+0, -1), (+0, +2),
                        (+1, -1), (+1, +2), (+2, +0), (+2, +1) ]
+        self.memory = {}
 
     def createInput(self, world):
         """ Create list of ressources availables around the queen
@@ -50,8 +51,9 @@ class Queen:
                 rPheros.append(access.APhero(ph, self))
 
         # creating list of available resources around
-        rRes = [(x, y, world[world.resT, self.x+x, self.y+y] and not \
-                world[world.antT, self.x+x, self.y+y]) for x,y in self.around]
+        rRes = [(x, y, world[world.mapT, self.x+x, self.y+y] & access.RESOURCE \
+                and not world[world.antT, self.x+x, self.y+y]) \
+                for x,y in self.around]
 
         return rRes, rPheros
 
@@ -67,6 +69,7 @@ class Ant:
         self.wasHurt = False
         self.isCarrying = False
         self.age = 0
+        self.memory = {}
 
     def __bool__(self):
         return True
@@ -78,6 +81,7 @@ class Ant:
         hs = s // 2
 
         rMap = [[~access.UNKNOWN for k in range(s)] for k in range(s)]
+        rAnts = [[False for k in range(s)] for k in range(s)]
         rPheros = []
         rOnPos = None
 
@@ -94,28 +98,32 @@ class Ant:
                 if (i, j) == (hs, hs):
                     r[i][j] = world[world.mapT, self.x, self.y]
                     continue
-                
+
                 l = abs(i - hs) + abs(j - hs)
                 u, v = float(i - hs) / l, float(j - hs) / l
-                
+
                 bla = False
                 for k in range(l + 1):
                     a, b = int(self.x + k*u), int(self.y + k*v)
+                    c, d = int(hs + k*u), int(hs + k*v)
+
                     tile = world[world.mapT, a, b]
 
-                    if world[world.antT, a, b]:
-                        tile|= access.ANT_ON_TILE
+                    if rMap[c][d] == ~access.UNKNOWN:
+                        rMap[c][d] = access.UNKNOWN if bla else tile
+                        if world[world.antT, a, b]:
+                            rAnts[c][d] = (access.AAnt if \
+                                           isinstance(world[world.antT, a, b], \
+                                                      Ant) else access.AQueen) \
+                                          (world[world.antT, a, b], noMem=True)
 
-                    if world[world.resT, a, b]:
-                        tile|= access.RES_ON_TILE
-
-                    if rMap[int(hs + k*u)][int(hs + k*v)] == ~access.UNKNOWN:
-                        rMap[int(hs + k*u)][int(hs + k*v)] = access.UNKNOWN \
-                                                               if bla else tile
                     bla|= tile & access.WALL
 
-        return rMap, rPheros, rOnPos
+        return rMap, rAnts, rPheros, rOnPos
 
+    def __str__(self):
+        r = "Hello! I'm an ant from team {c}, currently at {x}, {y}."
+        return r.format(c=self.color, x=self.x, y=self.y)
 
 
 class Phero:

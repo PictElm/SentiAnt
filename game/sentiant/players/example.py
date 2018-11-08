@@ -1,6 +1,6 @@
 import api.access as _
 
-def main(queen, resources, pheromonesList):
+def main(self, resources, pheromonesList):
     """ This `main` function is mandatory: that's the function
         your queen will be running on.
 
@@ -22,7 +22,7 @@ def main(queen, resources, pheromonesList):
     r = False
 
     # Starting sequences can facilitate debugging.
-    mainseq = _.seqstart(queen.color + ".main")
+    mainseq = _.seqstart(self.color + ".main")
 
     _.info("trying to spawn an `antRandom` somewhere...")
 
@@ -77,25 +77,23 @@ def antRandom(self, view, pheromonesList):
     action = _.WAIT
 
     # If there is a resource on the ground and we are not carrying one, ..
-    if _.RES_ON_TILE & view[0, 0] and not self.isCarrying:
+    if view[0, 0] & _.RESOURCE and not self.isCarrying:
         # .. we take it!
         action = _.TAKE_RES
     else:
         # .. otherwise, we move somwhere randomly...
         direction = [_.NORTH, _.SOUTH, _.EAST, _.WEAST][_.RNG.randrange(4)]
 
-        # If we cant move there because of a wall, we waste the turn!
-        isWall = False
-        if direction == _.NORTH and _.WALL & view[0, 1]:
-            isWall = True
-        elif direction == _.SOUTH and _.WALL & view[0, -1]:
-            isWall = True
-        elif direction == _.EAST and _.WALL & view[1, 0]:
-            isWall = True
-        elif direction == _.WEAST and _.WALL & view[-1, 0]:
-            isWall = True
+        targeted = _.asPosition(direction)
 
-        action = (_.DIG_AT if isWall else _.MOVE_TO) | direction
+        # If we cant move there because of a wall or an ant, we waste the turn!
+        isWall = view[targeted] & _.WALL
+        isAnt = view.isAnt(targeted)
+
+        if isAnt and isAnt.color != self.color:
+            action = _.ATTACK_ON | direction
+        else:
+            action = (_.DIG_AT if isWall else _.MOVE_TO) | direction
 
     # This is to not affect a pheromone that would be on our tile.
     phero = _.KEEP_PHERO
@@ -113,7 +111,7 @@ def antRandom(self, view, pheromonesList):
             phero = _.REFRESH_PHERO
 
             # We may as well try to replenish the stocks.
-            if self.isCarrying and not _.RES_ON_TILE & view[0, 0]:
+            if self.isCarrying and not view[0, 0] & _.RESOURCE:
                 _.info("There! I got you a cookie!")
                 action = _.DROP_RES
 

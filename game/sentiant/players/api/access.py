@@ -23,8 +23,6 @@ from time import time
 RNG = Random()
 
 
-NOT_FOUND     = -1
-
 # The following directions are to use in combination with:
 # `ATTACK_ON`, `MOVE_TO` or `DIG_AT`
 NORTH         = 1
@@ -45,13 +43,12 @@ WAIT          = DIG_AT << 1
 REFRESH_PHERO = WAIT << 1
 KEEP_PHERO    = REFRESH_PHERO << 1
 
-# The following flags are the ones to test whene reading the `AView` object
+# The following flags are the ones to test when reading the `AView` object
 # passed to your ant.
 WALL          = KEEP_PHERO << 1
 ROCK          = WALL << 1
-UNKNOWN       = ROCK << 1
-ANT_ON_TILE   = UNKNOWN << 1
-RES_ON_TILE   = ANT_ON_TILE << 1
+RESOURCE      = ROCK << 1
+UNKNOWN       = RESOURCE << 1
 
 # Actually, I don't think this is ever used...
 EMPTY         = 0
@@ -82,24 +79,25 @@ def loadSettings(configFile="sentiant/settings.config"):
 
 
 class AQueen:
-    """ A structue that allows you to access your run function and your color.
+    """ A structure that allows you to access your run function and your color.
     """
-    def __init__(self, queen):
+    def __init__(self, queen, noMem=False):
         self.run = queen.run
         self.color = queen.nest.color
+        self.memory = {} if noMem else queen.memory
 
 
 class AAnt:
     """ A structure that allows you to access:
-        + `x` and `y`: position in the `AView` object... you dont need it, it's
+        + `x` and `y`: position in the `AView` object... you don't need it, it's
             always centered on you;
         + `run`: the same function you using;
-        + `color`: you color... (althrough don't expect this to stick around in
-            futues versions!);
+        + `color`: you color... (although don't expect this to stick around in
+            futures versions!);
         + `isHurt`: whether you've been hurt once and are about to die;
-        + `isCarrying`: whether you's carrying -the game- a resource.
+        + `isCarrying`: whether you're carrying a resource.
     """
-    def __init__(self, ant):
+    def __init__(self, ant, noMem=False):
         self.x = settings['viewDistance'] // 2
         self.y = settings['viewDistance'] // 2
         self.run = ant.run
@@ -108,6 +106,7 @@ class AAnt:
         self.wasHurt = ant.wasHurt
         self.isCarrying = ant.isCarrying
         self.age = ant.age
+        self.memory = {} if noMem else ant.memory
 
 
 class APhero:
@@ -131,8 +130,10 @@ class AView:
             ``` view[x, y] ```
         .. so that you're, in fact, in the center of the view.
     """
-    def __init__(self, view):
+    def __init__(self, view, ants):
         self.view = view
+        self.ants = ants
+
         self.size = len(view)
         self.range = range(-self.size // 2, self.size // 2)
 
@@ -145,6 +146,28 @@ class AView:
 
     def __len__(self):
         return self.size
+
+    def isAnt(self, x, y=None):
+        if not y:
+            x, y = x
+        return self.ants[self.size // 2 + x][self.size // 2 + y]
+
+
+def asPosition(flags):
+    """ Translate a directionnal flag from an actions into a tuple indicating
+        the targeted tile. If no directionnal flag is found in the inputs,
+        returns (0, 0).
+    """
+    if flags & NORTH:
+        return 0, 1
+    elif flags & SOUTH:
+        return 0, -1
+    elif flags & EAST:
+        return 1, 0
+    elif flags & WEAST:
+        return -1, 0
+
+    return 0, 0
 
 
 seqname = {}
@@ -168,19 +191,19 @@ def stdout(s, end="\n", start="", seq=False):
     print(s, end=end)
 
 def info(s, seq=True):
-    """ Use that to ouput an information. """
+    """ Use that to output an information. """
     stdout(s, start="[Info]", seq=seq)
 
 def warning(s, seq=True):
-    """ Use that to ouput a warning. """
+    """ Use that to output a warning. """
     stdout(s, start="[Warn]", seq=seq)
 
 def error(s, seq=True):
-    """ Use that to ouput an error. """
+    """ Use that to output an error. """
     stdout(s, start="[Rror]", seq=seq)
 
 def debug(s, seq=True):
-    """ Use that to ouput a debug message. """
+    """ Use that to output a debug message. """
     stdout(s, start="[Dbug]", seq=seq)
 
 def newline():
@@ -188,14 +211,14 @@ def newline():
     stdout("")
 
 def seqstart(name, under=''):
-    """ Sequences allows you to organise your logs.
+    """ Sequences allows you to organize your logs.
 
-        To start a new sequence, use this function. You may save its ouputs
+        To start a new sequence, use this function. You may save its outputs
         (ID) in a local variable to use with `seqend`.
 
         When a sequence was started any new messages will, by default, be
         associated with this running sequence. To temporarily prevent this
-        behaviour, you can specify the keyword argument `seq=False` in any
+        behavior, you can specify the keyword argument `seq=False` in any
         messaging function.
     """
     if under != '':
@@ -212,13 +235,13 @@ def seqstart(name, under=''):
     return seqlast[-1]
 
 def seqend(seq=-1):
-    """ Sequences allows you to organise your logs.
+    """ Sequences allows you to organize your logs.
 
-        To end a (started) sequence, use this function. You sould specify
+        To end a (started) sequence, use this function. You should specify
         which sequence you want to end by giving the ID you stored from calling
         `seqstart`. If you don't specify any ID, the latest sequence started
         will be ended. (Yes, you can lose the master sequence call `game` or
-        the sub-sequence `turn[N]`, but you would be ruinnig your own logs...)
+        the sub-sequence `turn[N]`, but you would be running your own logs...)
     """
     seq = seq if seq in seqname.keys() else seqlast[-1]
 
