@@ -42,7 +42,8 @@ class World:
             while self[self.mapT, i, j] & access.RESOURCE:
                 i, j = access.RNG.randrange(s), access.RNG.randrange(s)
             self[self.mapT, i, j]|= access.RESOURCE
-            self[self.mapT, i, j]^= access.ROCK
+            if self[self.mapT, i, j] & access.ROCK:
+                self[self.mapT, i, j]^= access.ROCK
 
         return self
 
@@ -87,7 +88,7 @@ class World:
         if self.mapT[x][y] & access.WALL:
             flags|= graph.WALL
 
-        if self.mapT[x][y] & access.ROCK and not self.antT[x][y]:
+        if self.mapT[x][y] & access.ROCK:
             flags|= graph.ROCK
 
         graph.updateTile(x, y, flags)
@@ -123,6 +124,7 @@ class World:
                     self[self.mapT, posX, posY]^= access.RESOURCE
                     self[self.antT, posX, posY] = newAnt
 
+                    # send used resource back to world
                     s = access.settings['worldSize']
                     i, j = access.RNG.randrange(s), access.RNG.randrange(s)
                     while self[self.mapT, i, j] & access.RESOURCE:
@@ -166,7 +168,6 @@ class World:
 
             elif action & access.TAKE_RES and not ant.isCarrying \
                  and self[self.mapT, ant.x, ant.y] & access.RESOURCE:
-                access.debug("Accessing resource at {}, {}".format(ant.x, ant.y))
                 self[self.mapT, ant.x, ant.y]^= access.RESOURCE
                 ant.isCarrying = True
 

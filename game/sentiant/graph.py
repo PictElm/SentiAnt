@@ -56,7 +56,7 @@ def load():
 
     for i in range(2):
         for j in range(2):
-            filename = dir + "queen{}{}.png".format(i, j)
+            filename = dir + "queen{}{}.png".format(1-j, i)
             queen[i][j] = PhotoImage(file=filename).subsample(ratio)
 
     wallColor = access.settings['wallColor']
@@ -68,7 +68,7 @@ def load():
         for j in range(s):
             b = Button(root, bg=wallColor, borderwidth=1, image=empty, \
                        command=lambda x=i, y=j: handlePress(x, y))
-            b.grid(row=i, column=j)
+            b.grid(column=i, row=s-j+1)
             grid[-1].append(b)
 
 def start(mainloop):

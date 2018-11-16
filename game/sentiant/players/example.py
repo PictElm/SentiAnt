@@ -21,6 +21,9 @@ def main(self, resources, pheromonesList):
     """
     r = False
 
+    if not 'antCount' in self.memory.keys():
+        self.memory['antCount'] = 0
+
     # Starting sequences can facilitate debugging.
     mainseq = _.seqstart(self.color + ".main")
 
@@ -32,10 +35,12 @@ def main(self, resources, pheromonesList):
             _.debug("selected resource at {}, {} from me".format(x, y))
             # The new ant will use the algorithm described below.
             r = (x, y, antRandom)
+            # Keep track of the number of ants spawned from the begining.
+            self.memory['antCount']+= 1
             break
 
     if not r:
-        # Woops! We didn't found anything... Let's throw a warning.
+        # Woops! We didn't find anything... Let's throw a warning!
         _.warning("404 - resource not found!")
         r = _.WAIT
 

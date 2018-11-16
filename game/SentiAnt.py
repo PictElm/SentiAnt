@@ -66,6 +66,7 @@ def start(registered):
     for main in registered:
         s = access.settings['worldSize']
         x, y = access.RNG.randrange(s), access.RNG.randrange(s)
+        #x, y = world.generate.nextSpanwPosition()
         world.addNest(Queen(x, y, main[0], main[1]).nest)
 
     loop.mainseq = access.seqstart("game")
