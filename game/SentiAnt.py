@@ -21,7 +21,7 @@ from sentiant.parts import Queen
 
 
 def load(dirname):
-    """ Load players alorithms.
+    """ Load players algorithms.
 
         Try to loads a `main` function form every `.py` or `.pyc` (or even
         '.pyw', by why would you?) files. If a file lack a `main` function,
@@ -56,13 +56,18 @@ def load(dirname):
     return r
 
 def start(registered):
-    """ Start the simuation.
+    """ Start the simulation.
 
         + Spawn a queen (and its nest) for each contestant registered
             (returned from `load`).
         + Starts the main sequence.
         + Enter the main loop.
     """
+    access.newline()
+    access.info("Seed: " + str(access.settings['randomSeed']) + ".")
+    access.info("(you will need this seed to replay the exact same game...)")
+    access.newline()
+
     for main in registered:
         s = access.settings['worldSize']
         x, y = access.RNG.randrange(s), access.RNG.randrange(s)
@@ -89,12 +94,12 @@ def loop():
     access.seqend(subseq)
 
 def test():
-    """ Returns `True` if the simulation sould be ended.
+    """ Returns `True` if the simulation should be ended.
 
         Used in `loop` to check if the simulation is finished or should be
         stopped. In fact, the simulation is killed after
         `settings: turnsLimit`. Set this setting to a negative value to prevent
-        this behaviour.
+        this behavior.
     """
     loop.counter+= 1
     l = access.settings['turnsLimit']

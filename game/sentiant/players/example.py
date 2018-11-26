@@ -1,5 +1,6 @@
 import api.access as _
 
+
 def main(self, resources, pheromonesList):
     """ This `main` function is mandatory: that's the function
         your queen will be running on.
@@ -9,7 +10,7 @@ def main(self, resources, pheromonesList):
         + `resources`: a list of `(x, y, available)` where `available` is
             `True` if there is a usable resource on the tile at `(x, y)`
             relative to the queen;
-        + `pheromonesList`: a list of `APhero` spoted from any of the 4
+        + `pheromonesList`: a list of `APhero` spotted from any of the 4
             tiles the queen occupies.
 
         ## Returns:
@@ -35,12 +36,12 @@ def main(self, resources, pheromonesList):
             _.debug("selected resource at {}, {} from me".format(x, y))
             # The new ant will use the algorithm described below.
             r = (x, y, antRandom)
-            # Keep track of the number of ants spawned from the begining.
+            # Keep track of the number of ants spawned from the beginning.
             self.memory['antCount']+= 1
             break
 
     if not r:
-        # Woops! We didn't find anything... Let's throw a warning!
+        # Oops! We didn't find anything... Let's throw a warning!
         _.warning("404 - resource not found!")
         r = _.WAIT
 
@@ -56,8 +57,8 @@ def antRandom(self, view, pheromonesList):
         ## Arguments:
         + `self`: a `access.AAnt` instance;
         + `view`: a part of the world maps, of size `settings: viewDistance`
-            centred on the ant (this is an instance of `access.AView`);
-        + `pheromonesList`: a list of `APhero` spoted from the tiles the
+            centered on the ant (this is an instance of `access.AView`);
+        + `pheromonesList`: a list of `APhero` spotted from the tiles the
             ant occupies.
 
         ## Returns:
@@ -77,7 +78,7 @@ def antRandom(self, view, pheromonesList):
         + do nothing: `access.WAIT` (or anything unexpected -- again, prefer
             using `access.WAIT` to idle).
     """
-    _.debug("What do I do" + (" with this!?" if self.isCarrying else "?!"))
+    #_.debug("What do I do" + (" with this!?" if self.isCarrying else "?!"))
 
     action = _.WAIT
 
@@ -86,19 +87,8 @@ def antRandom(self, view, pheromonesList):
         # .. we take it!
         action = _.TAKE_RES
     else:
-        # .. otherwise, we move somwhere randomly...
-        direction = [_.NORTH, _.SOUTH, _.EAST, _.WEAST][_.RNG.randrange(4)]
-
-        targeted = _.asPosition(direction)
-
-        # If we cant move there because of a wall or an ant, we waste the turn!
-        isWall = view[targeted] & _.WALL
-        isAnt = view.isAnt(targeted)
-
-        if isAnt and isAnt.color != self.color:
-            action = _.ATTACK_ON | direction
-        else:
-            action = (_.DIG_AT if isWall else _.MOVE_TO) | direction
+        # .. otherwise, we move somewhere randomly...
+        action = chooseNextMoveTo(self, view)
 
     # This is to not affect a pheromone that would be on our tile.
     phero = _.KEEP_PHERO
@@ -119,5 +109,65 @@ def antRandom(self, view, pheromonesList):
             if self.isCarrying and not view[0, 0] & _.RESOURCE:
                 _.info("There! I got you a cookie!")
                 action = _.DROP_RES
+            # Don't pick up the resource on the verry next turn!
+            elif not self.isCarrying:
+                action = chooseNextMoveTo(self, view)
 
+    # Note that the pheromone part will take place before the action part.
+    _.debug(describeIntents(action, phero))
     return action, phero
+
+
+def chooseNextMoveTo(ant, view):
+    """ ## You can define and use your own function:
+        This function choose a random adjacent tile to move to; if the tile is
+        blocked, dig through, if the tile is allready occupied by other than an
+        ally ant, **kill it**.
+    """
+    action = _.WAIT
+    direction = [_.NORTH, _.SOUTH, _.EAST, _.WEAST][_.RNG.randrange(4)]
+    targeted = _.asPosition(direction)
+
+    # If we cant move there because of a wall or an ant, we waste the turn!
+    isWall = view[targeted] & _.WALL
+    isAnt = view.isAnt(targeted)
+
+    if isAnt and isAnt.color != ant.color:
+        action = _.ATTACK_ON | direction
+    else:
+        action = (_.DIG_AT if isWall else _.MOVE_TO) | direction
+
+    return action
+
+
+def describeIntents(action, phero):
+    AtoS = ""
+
+    if action & _.MOVE_TO:
+        AtoS = "move to "
+    elif action & _.ATTACK_ON:
+        AtoS = "attack on "
+    elif action & _.DIG_AT:
+        AtoS = "dig at "
+    elif action & _.WAIT:
+        AtoS = "wait "
+
+    if action & _.NORTH:
+        AtoS+= "north"
+    elif action & _.SOUTH:
+        AtoS+= "south"
+    elif action & _.EAST:
+        AtoS+= "east"
+    elif action & _.WEAST:
+        AtoS+= "weast"
+
+    PtoS = ""
+
+    if phero & _.KEEP_PHERO:
+        PtoS = "keep this pheromone as it is"
+    elif phero & _.REFRESH_PHERO:
+        PtoS = "refresh this pheromone"
+    elif phero in range(16):
+        PtoS = "apply a " + str(phero) + " pheromone"
+
+    return "I will " + AtoS + " after I've " + PtoS + "."

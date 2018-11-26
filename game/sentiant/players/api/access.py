@@ -19,7 +19,7 @@ from time import time
 
 # `RNG` is you random number generator: use this to implement randomness in
 # your algorithms, this way any simulation can be reproduces as long as you
-# have the seed (given at the end of simulation).
+# have the seed (given at the start and end of a simulation).
 RNG = Random()
 
 
@@ -75,7 +75,7 @@ def loadSettings(configFile="sentiant/settings.config"):
     if 'randomSeed' not in settings.keys():
         settings['randomSeed'] = int(time())
     RNG.seed(settings['randomSeed'])
-    RNG.seed = lambda *x: warning("You's not supposed to do that!") # trying...
+    RNG.seed = lambda *w: warning("You's not supposed to do that!") # trying...
 
 
 class AQueen:
@@ -117,8 +117,8 @@ class APhero:
         + `decay`: its decaying progress form 0 to `settings: pheroRange`.
     """
     def __init__(self, phero, relateAnt):
-        self.x = phero.x - relateAnt.x + settings['viewDistance'] // 2
-        self.y = phero.y - relateAnt.x + settings['viewDistance'] // 2
+        self.x = phero.x - relateAnt.x
+        self.y = phero.y - relateAnt.y
         self.value = phero.value
         self.decay = phero.decay
 
@@ -154,8 +154,8 @@ class AView:
 
 
 def asPosition(flags):
-    """ Translate a directionnal flag from an actions into a tuple indicating
-        the targeted tile. If no directionnal flag is found in the inputs,
+    """ Translate a directional flag from an actions into a tuple indicating
+        the targeted tile. If no directional flag is found in the inputs,
         returns (0, 0).
     """
     if flags & NORTH:
@@ -176,7 +176,7 @@ seqlast = []
 def stdout(s, end="\n", start="", seq=False):
     """ Standard output, you don't need to use it directly.
 
-        This will (one day), with `settings: logsDirectory` allow the logs to
+        This will (one day), with `settings: logsDirectory`, allow the logs to
         be available in:
         + `stdout.log` file with anything that was logged;
         + `[teamname].log` file for what relates to a team.

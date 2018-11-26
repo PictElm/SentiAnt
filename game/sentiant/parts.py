@@ -33,9 +33,9 @@ class Queen:
         self.y = posLowerY
         self.run = callback
         self.nest = Nest(self, color)
-        self.around = [(-1, +0), (-1, +1), (+0, -1), (+0, +2),
-                       (+1, -1), (+1, +2), (+2, +0), (+2, +1) ]
-        self.memory = {}
+        self.around = [ (-1, +0), (-1, +1), (+0, -1), (+0, +2),
+                        (+1, -1), (+1, +2), (+2, +0), (+2, +1) ]
+        self.memory = { }
 
     def createInput(self, world):
         """ Create list of ressources availables around the queen

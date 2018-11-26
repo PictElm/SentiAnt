@@ -55,12 +55,12 @@ class World:
                                                                    access.EMPTY
 
         for i, j in nest.queen.around:
-            self[self.mapT, nest.queen.x+i, nest.queen.y+j]|= access.RESOURCE
+            self[self.mapT, nest.queen.x +i, nest.queen.y +j]|= access.RESOURCE
 
         for i in range(2):
             for j in range(2):
                 #self[self.mapT, nest.queen.x+i, nest.queen.y+j]|= access.ROCK
-                self[self.antT, nest.queen.x+i, nest.queen.y+j] = nest.queen
+                self[self.antT, nest.queen.x + i, nest.queen.y + j] = nest.queen
 
         graph.drawQueen(nest.queen.x, nest.queen.y)
 
@@ -91,7 +91,12 @@ class World:
         if self.mapT[x][y] & access.ROCK:
             flags|= graph.ROCK
 
-        graph.updateTile(x, y, flags)
+        ph, dk = -1, -1
+        for phero in self.pheros:
+            if phero.x == x and phero.y == y:
+                ph, dk = phero.value, phero.decay
+
+        graph.updateTile(x, y, flags, str(ph) + ", " + str(dk))
 
     def __getitem__(self, Txy):
         T, x, y = Txy
@@ -111,11 +116,10 @@ class World:
             action = queen.run(aqueen, resPos, pheros)
             queen.memory.update(aqueen.memory)
 
-            if action != access.WAIT and isinstance(action, tuple) \
-                                         or isinstance(action, list):
+            if action != access.WAIT and ( isinstance(action, tuple) \
+                                        or isinstance(action, list) ):
                 posX, posY, cb = action
-                posX+= queen.x
-                posY+= queen.y
+                posX, posY = self.coords(posX + queen.x, posY + queen.y)
 
                 if self[self.mapT, posX, posY] & access.RESOURCE:
                     newAnt = Ant(posX, posY, nest, cb)
@@ -124,7 +128,7 @@ class World:
                     self[self.mapT, posX, posY]^= access.RESOURCE
                     self[self.antT, posX, posY] = newAnt
 
-                    # send used resource back to world
+                    # send used resource back to the world
                     s = access.settings['worldSize']
                     i, j = access.RNG.randrange(s), access.RNG.randrange(s)
                     while self[self.mapT, i, j] & access.RESOURCE:
@@ -146,40 +150,52 @@ class World:
 
             # pheromone processing
             if isinstance(onPos, Phero):
-                onPos.decay-= 1
+                onPos.decay+= 1
+
                 if value == access.REFRESH_PHERO:
                     onPos.decay = 0
-            elif value != access.KEEP_PHERO and value in range(16):
+                elif value in range(16):
+                    onPos.x, onPos.y = ant.x, ant.y
+                    onPos.decay, onPos.value = 0, value
+
+                if onPos.decay == access.settings['pheroRange']:
+                    self.pheros.remove(onPos)
+                    self[self.mapT, onPos.x, onPos.y]+= 0
+
+            elif value in range(16):
                 self.pheros.append(Phero(ant.x, ant.y, value))
+                self[self.mapT, ant.x, ant.y]+= 0
 
-            # action processing
-            dx, dy = access.asPosition(action)
-            X, Y = self.coords(ant.x + dx, ant.y + dy)
+            # grown-up stuff
+            if 0 < ant.age or True:
+                # action processing
+                dx, dy = access.asPosition(action)
+                X, Y = self.coords(ant.x + dx, ant.y + dy)
 
-            if action & access.ATTACK_ON and not ant.isCarrying:
-                if self[self.antT, X, Y]:
-                    toHurt.append(self[self.antT, X, Y])
+                if action & access.ATTACK_ON and not ant.isCarrying:
+                    if self[self.antT, X, Y]:
+                        toHurt.append(self[self.antT, X, Y])
 
-            elif action & access.MOVE_TO and not ant.isCarrying:
-                if not self[self.antT, X, Y] \
-                   and not self[self.mapT, X, Y] & access.WALL:
-                    toMove.append((ant, X, Y))
-                    self[self.antT, X, Y] = ant
+                elif action & access.MOVE_TO:
+                    if not self[self.antT, X, Y] \
+                       and not self[self.mapT, X, Y] & access.WALL:
+                        toMove.append((ant, X, Y))
+                        self[self.antT, X, Y] = ant
 
-            elif action & access.TAKE_RES and not ant.isCarrying \
-                 and self[self.mapT, ant.x, ant.y] & access.RESOURCE:
-                self[self.mapT, ant.x, ant.y]^= access.RESOURCE
-                ant.isCarrying = True
+                elif action & access.TAKE_RES and not ant.isCarrying \
+                     and self[self.mapT, ant.x, ant.y] & access.RESOURCE:
+                    self[self.mapT, ant.x, ant.y]^= access.RESOURCE
+                    ant.isCarrying = True
 
-            elif action & access.DROP_RES and ant.isCarrying \
-                 and not self[self.mapT, ant.x, ant.y] & access.RESOURCE:
-                self[self.mapT, ant.x, ant.y]|= access.RESOURCE
-                ant.isCarrying = False
+                elif action & access.DROP_RES and ant.isCarrying \
+                     and not self[self.mapT, ant.x, ant.y] & access.RESOURCE:
+                    self[self.mapT, ant.x, ant.y]|= access.RESOURCE
+                    ant.isCarrying = False
 
-            elif action & access.DIG_AT and not ant.isCarrying:
-                if not self[self.mapT, X, Y] & access.ROCK \
-                   and self[self.mapT, X, Y] & access.WALL:
-                    self[self.mapT, X, Y]^= access.WALL
+                elif action & access.DIG_AT and not ant.isCarrying:
+                    if not self[self.mapT, X, Y] & access.ROCK \
+                       and self[self.mapT, X, Y] & access.WALL:
+                        self[self.mapT, X, Y]^= access.WALL
 
             # others
             ant.x, ant.y = self.coords(ant.x, ant.y)

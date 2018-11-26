@@ -68,6 +68,7 @@ def load():
         for j in range(s):
             b = Button(root, bg=wallColor, borderwidth=1, image=empty, \
                        command=lambda x=i, y=j: handlePress(x, y))
+                       #fg="Black", compound="top", text="-1, -1")
             b.grid(column=i, row=s-j+1)
             grid[-1].append(b)
 
@@ -75,7 +76,7 @@ def start(mainloop):
     mainloop()
     root.mainloop()
 
-def updateTile(x, y, f):
+def updateTile(x, y, f, ph):
     img = empty
 
     if f & ANT:
