@@ -102,7 +102,7 @@ def antRandom(self, view, pheromonesList):
         # If the pheromone on our tile indicate a spawn point, ..
         if ph.x == 0 and ph.y == 0 and ph.value == 0:
             # .. we refresh it.
-            _.debug("Refreshing spawn...")
+            _.debug("Refreshing spawn indicator...")
             phero = _.REFRESH_PHERO
 
             # We may as well try to replenish the stocks.

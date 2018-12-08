@@ -64,13 +64,18 @@ def loadSettings(configFile="sentiant/settings.config"):
         you don't need it in your code! Also set the seed from settings
         (or from `time.time()` if none provided).
     """
+    global settings
+
     if settings:
         return
 
     for it in open(configFile).readlines():
         if it[0] not in (';', '#', '\n'):
-            k, v = it.strip().replace(' ', '').split(':')
-            settings.update({ k: int(v) if v.isnumeric() else v })
+            k, v = it.split(':')
+            k, v = k.strip(), v.strip()
+
+            settings.update({ k: v[1:-1] if v[0] == '"' and v[-1] == '"' \
+                                  else (float if v[-1] == 'f' else int)(v) })
 
     if 'randomSeed' not in settings.keys():
         settings['randomSeed'] = int(time())
@@ -98,8 +103,8 @@ class AAnt:
         + `isCarrying`: whether you're carrying a resource.
     """
     def __init__(self, ant, noMem=False):
-        self.x = settings['viewDistance'] // 2
-        self.y = settings['viewDistance'] // 2
+        self.x = 0 #settings['viewDistance'] // 2
+        self.y = 0 #settings['viewDistance'] // 2
         self.run = ant.run
         self.color = ant.nest.color
         self.isHurt = ant.isHurt

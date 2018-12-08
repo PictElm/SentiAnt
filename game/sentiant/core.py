@@ -79,7 +79,7 @@ class World:
 
         flags = graph.EMPTY
 
-        if self.antT[x][y]:
+        if isinstance(self.antT[x][y], Ant):
             flags|= graph.ANT
 
         if self.mapT[x][y] & access.RESOURCE:
