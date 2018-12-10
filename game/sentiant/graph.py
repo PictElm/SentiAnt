@@ -14,7 +14,7 @@
    limitations under the License.
 """
 
-from tkinter import Tk, Button, PhotoImage
+import tkinter as tk
 
 from sentiant.core import access
 
@@ -26,7 +26,7 @@ RES = 4
 ROCK = 8
 
 
-root = Tk()
+root = tk.Tk()
 
 ant     = None
 ant_res = None
@@ -41,40 +41,93 @@ emptyColor = "snow"
 
 grid = []
 
+tileSize = 100
+
 def load():
     global ant, ant_res, res, rock, empty, wallColor, emptyColor
 
-    ratio = int(250 / (access.settings['windowSize']\
-                       /access.settings['worldSize']))
+    #ratio = int(250 / (access.settings['windowSize']\
+    #                   /access.settings['worldSize']))
+    global tileSize
+    tileSize = access.settings['tileSize']
+    ratio = 250 // tileSize
     dir = access.settings['texturesDirectory']
 
-    ant     = PhotoImage(file=dir + "ant.png").subsample(ratio)
-    ant_res = PhotoImage(file=dir + "ant_res.png").subsample(ratio)
-    res     = PhotoImage(file=dir + "res.png").subsample(ratio)
-    rock    = PhotoImage(file=dir + "rock.png").subsample(ratio)
-    empty   = PhotoImage(file=dir + "empty.png").subsample(ratio)
+    ant     = tk.PhotoImage(file=dir + "ant.png").subsample(ratio)
+    ant_res = tk.PhotoImage(file=dir + "ant_res.png").subsample(ratio)
+    res     = tk.PhotoImage(file=dir + "res.png").subsample(ratio)
+    rock    = tk.PhotoImage(file=dir + "rock.png").subsample(ratio)
+    empty   = tk.PhotoImage(file=dir + "empty.png").subsample(ratio)
 
     for i in range(2):
         for j in range(2):
             filename = dir + "queen{}{}.png".format(1-j, i)
-            queen[i][j] = PhotoImage(file=filename).subsample(ratio)
+            queen[i][j] = tk.PhotoImage(file=filename).subsample(ratio)
 
     wallColor = access.settings['wallColor']
     emptyColor = access.settings['emptyColor']
+
+    # configure window
+    vsb = tk.Scrollbar(root, orient=tk.VERTICAL)
+    vsb.grid(row=0, column=1, sticky=tk.N + tk.S)
+
+    hsb = tk.Scrollbar(root, orient=tk.HORIZONTAL)
+    hsb.grid(row=1, column=0, sticky=tk.E + tk.W)
+
+    canvas = tk.Canvas(root, yscrollcommand=vsb.set, xscrollcommand=hsb.set)
+    canvas.grid(row=0, column=0, sticky="news")
+
+    vsb.config(command=canvas.yview)
+    hsb.config(command=canvas.xview)
+
+    root.grid_rowconfigure(0, weight=1)
+    root.grid_columnconfigure(0, weight=1)
+
+    frame = tk.Frame(canvas)
 
     s = access.settings['worldSize']
     for i in range(s):
         grid.append([])
         for j in range(s):
-            b = Button(root, bg=wallColor, borderwidth=1, image=empty, \
-                       command=lambda x=i, y=j: handlePress(x, y))
-                       #fg="Black", compound="top", text="-1, -1")
+            b = tk.Label(frame, bg=wallColor, borderwidth=1, image=empty, \
+                         text=" ", width=tileSize, height=tileSize, \
+                         #command=lambda x=i, y=j: handlePress(x, y), \
+                         fg=access.settings['textColor'], compound=tk.CENTER)
             b.grid(column=i, row=s-j+1)
             grid[-1].append(b)
+
+    canvas.create_window(0, 0, window=frame)
+    frame.update_idletasks()
+    canvas.config(scrollregion=canvas.bbox("all"))
+    root.bind_all("<MouseWheel>", lambda e: scroll(canvas, e))
+
+def scroll(canvas, event):
+    if event.state & 4:
+        global tileSize
+        tileSize+= event.delta // 120
+
+        for row in grid:
+            for it in row:
+                it.configure(width=tileSize, height=tileSize)
+
+        canvas.update_idletasks()
+        root.update_idletasks()
+
+    elif event.state & 1:
+        canvas.xview_scroll(-event.delta // 120, "units")
+    else:
+        canvas.yview_scroll(-event.delta // 120, "units")
 
 def start(mainloop):
     mainloop()
     root.mainloop()
+
+def drawQueen(lowerX, lowerY):
+    s = access.settings['worldSize']
+    for i in range(2):
+        for j in range(2):
+            x, y = (lowerX + i) % s, (lowerY + j) % s
+            grid[x][y].config(image=queen[i][j], bg=emptyColor)
 
 def updateTile(x, y, f, ph):
     img = empty
@@ -86,14 +139,8 @@ def updateTile(x, y, f, ph):
     elif f & ROCK:
         img = rock
 
-    grid[x][y].config(image=img, bg=wallColor if f & WALL else emptyColor)
-
-def drawQueen(lowerX, lowerY):
-    s = access.settings['worldSize']
-    for i in range(2):
-        for j in range(2):
-            x, y = (lowerX + i) % s, (lowerY + j) % s
-            grid[x][y].config(image=queen[i][j], bg=emptyColor)
+    grid[x][y].config(bg=wallColor if f & WALL else emptyColor, \
+                      image=img, text=ph)
 
 def update(next):
     root.update_idletasks()

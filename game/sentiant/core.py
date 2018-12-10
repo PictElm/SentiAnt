@@ -96,7 +96,8 @@ class World:
             if phero.x == x and phero.y == y:
                 ph, dk = phero.value, phero.decay
 
-        graph.updateTile(x, y, flags, str(ph) + ", " + str(dk))
+        graph.updateTile(x, y, flags, \
+                         " " if ph + dk == -2 else str(ph) + ", " + str(dk))
 
     def __getitem__(self, Txy):
         T, x, y = Txy

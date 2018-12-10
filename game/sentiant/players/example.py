@@ -114,7 +114,7 @@ def antRandom(self, view, pheromonesList):
                 action = chooseNextMoveTo(self, view)
 
     # Note that the pheromone part will take place before the action part.
-    _.debug(describeIntents(action, phero))
+    #_.debug(describeIntents(action, phero))
     return action, phero
 
 

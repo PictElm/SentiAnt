@@ -187,6 +187,10 @@ def stdout(s, end="\n", start="", seq=False):
         + `[teamname].log` file for what relates to a team.
         (+ `stderr.log`, `[mainseq]/[subseq]/[lastseq].log`, `turn[N].log`, ..)
     """
+    from sentiant.core import access
+    if access.settings['silence']:
+        return
+
     print(start, end=" ")
 
     if seq and seqlast:
