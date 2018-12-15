@@ -28,13 +28,16 @@ ROCK = 8
 
 root = tk.Tk()
 
-ant     = None
-ant_res = None
+colors = ['black', 'red', 'brown']
+colorMap = {}
+
 res     = None
 rock    = None
 empty   = None
 
-queen   = [[None, None], [None, None]]
+ant     = {}
+ant_res = {}
+queen   = {}
 
 wallColor = "snow"
 emptyColor = "snow"
@@ -53,16 +56,21 @@ def load():
     ratio = 250 // tileSize
     dir = api.settings('texturesDirectory')
 
-    ant     = tk.PhotoImage(file=dir + "ant.png").subsample(ratio)
-    ant_res = tk.PhotoImage(file=dir + "ant_res.png").subsample(ratio)
-    res     = tk.PhotoImage(file=dir + "res.png").subsample(ratio)
-    rock    = tk.PhotoImage(file=dir + "rock.png").subsample(ratio)
-    empty   = tk.PhotoImage(file=dir + "empty.png").subsample(ratio)
+    res   = tk.PhotoImage(file=dir + "res.png").subsample(ratio)
+    rock  = tk.PhotoImage(file=dir + "rock.png").subsample(ratio)
+    empty = tk.PhotoImage(file=dir + "empty.png").subsample(ratio)
 
-    for i in range(2):
-        for j in range(2):
-            filename = dir + "queen{}{}.png".format(1-j, i)
-            queen[i][j] = tk.PhotoImage(file=filename).subsample(ratio)
+    for c in colors:
+        d_ = dir + c + "/"
+
+        ant[c]     = tk.PhotoImage(file=d_ + "ant.png").subsample(ratio)
+        ant_res[c] = tk.PhotoImage(file=d_ + "ant_res.png").subsample(ratio)
+
+        queen[c] = [[None, None], [None, None]]
+        for i in range(2):
+            for j in range(2):
+                filename = d_ + "queen{}{}.png".format(1-j, i)
+                queen[c][i][j] = tk.PhotoImage(file=filename).subsample(ratio)
 
     wallColor = api.settings('wallColor')
     emptyColor = api.settings('emptyColor')
@@ -91,7 +99,6 @@ def load():
         for j in range(s):
             b = tk.Label(frame, bg=wallColor, borderwidth=1, image=empty, \
                          text=" ", width=tileSize, height=tileSize, \
-                         #command=lambda x=i, y=j: handlePress(x, y), \
                          fg=api.settings('textColor'), compound=tk.CENTER)
             b.grid(column=i, row=s-j+1)
             grid[-1].append(b)
@@ -118,22 +125,27 @@ def scroll(canvas, event):
     else:
         canvas.yview_scroll(-event.delta // 120, "units")
 
-def start(mainloop):
-    mainloop()
-    root.mainloop()
+def makeColorMap(names):
+    # TODO: max of 3 teams (red, brown and black)
+    for k in range(min(len(names), len(colors))):
+        colorMap[names[k]] = colors[k]
 
-def drawQueen(lowerX, lowerY):
+def drawQueen(lowerX, lowerY, name):
     s = api.settings('worldSize')
     for i in range(2):
         for j in range(2):
             x, y = (lowerX + i) % s, (lowerY + j) % s
-            grid[x][y].config(image=queen[i][j], bg=emptyColor)
+            grid[x][y].config(image=queen[colorMap[name]][i][j], bg=emptyColor)
 
-def updateTile(x, y, f, ph):
+def start(mainloop):
+    mainloop()
+    root.mainloop()
+
+def updateTile(x, y, f, ph, name):
     img = empty
 
     if f & ANT:
-        img = ant_res if f & RES else ant
+        img = ant_res[colorMap[name]] if f & RES else ant[colorMap[name]]
     elif f & RES:
         img = res
     elif f & ROCK:

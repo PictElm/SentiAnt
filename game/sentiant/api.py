@@ -187,16 +187,16 @@ def stdout(s, end="\n", start="", seq=False):
         + `[teamname].log` file for what relates to a team.
         (+ `stderr.log`, `[mainseq]/[subseq]/[lastseq].log`, `turn[N].log`, ..)
     """
-    if settings('silence'):
-        return
-
-    print(start, end=" ")
+    out = start + " "
 
     if seq and seqlast:
         seq = seqname[seq if seq in seqname.keys() else seqlast[-1]]
-        print("<" + seq + "> ", end="")
+        out+= "<" + seq + "> "
 
-    print(s, end=end)
+    out+= s + end
+
+    if not settings('silence'):
+        print(out, end="")
 
 def info(s, seq=True):
     """ Use that to output an information. """

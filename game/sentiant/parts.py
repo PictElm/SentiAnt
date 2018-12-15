@@ -25,6 +25,8 @@ class Nest:
 
         self.queen.nest = self
 
+    def remove(self, ant):
+        self.ants.remove(ant)
 
 
 class Queen:

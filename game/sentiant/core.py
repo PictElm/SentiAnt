@@ -63,7 +63,7 @@ class World:
                 #self[self.mapT, nest.queen.x+i, nest.queen.y+j]|= api.ROCK
                 self[self.antT, nest.queen.x + i, nest.queen.y + j] = nest.queen
 
-        graph.drawQueen(nest.queen.x, nest.queen.y)
+        graph.drawQueen(nest.queen.x, nest.queen.y, nest.color)
 
         self.nests.append(nest)
 
@@ -79,9 +79,11 @@ class World:
         T[x][y] = v
 
         flags = graph.EMPTY
+        name = ""
 
         if isinstance(self.antT[x][y], Ant):
             flags|= graph.ANT
+            name = self.antT[x][y].nest.color
 
         if self.mapT[x][y] & api.RESOURCE:
             flags|= graph.RES
@@ -98,7 +100,8 @@ class World:
                 ph, dk = phero.value, phero.decay
 
         graph.updateTile(x, y, flags, \
-                         " " if ph + dk == -2 else str(ph) + ", " + str(dk))
+                         " " if ph + dk == -2 else str(ph) + ", " + str(dk), \
+                         name)
 
     def __getitem__(self, Txy):
         T, x, y = Txy
@@ -175,7 +178,7 @@ class World:
                 X, Y = self.coords(ant.x + dx, ant.y + dy)
 
                 if action & api.ATTACK_ON and not ant.isCarrying:
-                    if self[self.antT, X, Y]:
+                    if isinstance(self[self.antT, X, Y], Ant):
                         toHurt.append(self[self.antT, X, Y])
 
                 elif action & api.MOVE_TO:

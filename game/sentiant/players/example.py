@@ -79,7 +79,7 @@ def antRandom(self, view, pheromonesList):
         + do nothing: `access.WAIT` (or anything unexpected -- again, prefer
             using `access.WAIT` to idle).
     """
-    #_.debug("What do I do" + (" with this!?" if self.isCarrying else "?!"))
+    _.debug("What do I do" + (" with this!?" if self.isCarrying else "?!"))
 
     action = _.WAIT
 
@@ -115,7 +115,7 @@ def antRandom(self, view, pheromonesList):
                 action = chooseNextMoveTo(self, view)
 
     # Note that the pheromone part will take place before the action part.
-    #_.debug(describeIntents(action, phero))
+    _.debug(describeIntents(action, phero)) # (This is the talkative part...)
     return action, phero
 
 

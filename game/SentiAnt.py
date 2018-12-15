@@ -68,6 +68,8 @@ def start(registered):
     api.info("(you will need this seed to replay the exact same game...)")
     api.newline()
 
+    graph.makeColorMap([main[1] for main in registered])
+    
     for main in registered:
         s = api.settings('worldSize')
         x, y = api.RNG.randrange(s), api.RNG.randrange(s)
