@@ -14,7 +14,7 @@
    limitations under the License.
 """
 
-from sentiant.core import access
+from sentiant.core import api
 
 
 class Nest:
@@ -48,10 +48,10 @@ class Queen:
                ph.isInRange(self.x+0, self.y+1) or \
                ph.isInRange(self.x+1, self.y+0) or \
                ph.isInRange(self.x+1, self.y+1):
-                rPheros.append(access.APhero(ph, self))
+                rPheros.append(api.APhero(ph, self))
 
         # creating list of available resources around
-        rRes = [(x, y, world[world.mapT, self.x+x, self.y+y] & access.RESOURCE \
+        rRes = [(x, y, world[world.mapT, self.x+x, self.y+y] & api.RESOURCE \
                 and not world[world.antT, self.x+x, self.y+y]) \
                 for x,y in self.around]
 
@@ -77,10 +77,10 @@ class Ant:
     def createInput(self, world):
         """ Crops map and selects pheromones to input
         """
-        s = access.settings['viewDistance']
+        s = api.settings('viewDistance')
         hs = s // 2
 
-        rMap = [[~access.UNKNOWN for k in range(s)] for k in range(s)]
+        rMap = [[~api.UNKNOWN for k in range(s)] for k in range(s)]
         rAnts = [[False for k in range(s)] for k in range(s)]
         rPheros = []
         rOnPos = None
@@ -88,7 +88,7 @@ class Ant:
         # creating pheromones list
         for ph in world.pheros:
             if ph.isInRange(self.x, self.y):
-                rPheros.append(access.APhero(ph, self))
+                rPheros.append(api.APhero(ph, self))
                 if self.x == ph.x and self.y == ph.y:
                     rOnPos = ph
 
@@ -109,15 +109,15 @@ class Ant:
 
                     tile = world[world.mapT, a, b]
 
-                    if rMap[c][d] == ~access.UNKNOWN:
-                        rMap[c][d] = access.UNKNOWN if bla else tile
+                    if rMap[c][d] == ~api.UNKNOWN:
+                        rMap[c][d] = api.UNKNOWN if bla else tile
                         if world[world.antT, a, b]:
-                            rAnts[c][d] = (access.AAnt if \
+                            rAnts[c][d] = (api.AAnt if \
                                            isinstance(world[world.antT, a, b], \
-                                                      Ant) else access.AQueen) \
+                                                      Ant) else api.AQueen) \
                                           (world[world.antT, a, b], noMem=True)
 
-                    bla|= tile & access.WALL
+                    bla|= tile & api.WALL
 
         return rMap, rAnts, rPheros, rOnPos
 
@@ -134,7 +134,7 @@ class Phero:
         self.value = value
 
     def isInRange(self, posX, posY):
-        s = access.settings['worldSize']
+        s = api.settings('worldSize')
         a = min(abs(posX - self.x), abs(posX - s - self.x))
         b = min(abs(posY - self.y), abs(posY - s - self.y))
-        return abs(a) + abs(b) < access.settings['pheroRange'] - self.decay
+        return abs(a) + abs(b) < api.settings('pheroRange') - self.decay

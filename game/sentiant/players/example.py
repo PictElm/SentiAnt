@@ -1,4 +1,5 @@
-import api.access as _
+# Imports every usefull functions and constants.
+from sentiant import api as _
 
 
 def main(self, resources, pheromonesList):

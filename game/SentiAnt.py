@@ -14,10 +14,10 @@
    limitations under the License.
 """
 
-import os
-
-from sentiant.core import World, access, graph
+from sentiant.core import World, api, graph
 from sentiant.parts import Queen
+
+import os
 
 
 def load(dirname):
@@ -34,23 +34,23 @@ def load(dirname):
     prev = os.getcwd()
     os.chdir(dirname)
 
-    seq = access.seqstart("loading")
+    seq = api.seqstart("loading")
 
     for filename in os.listdir():
         if filename[-3:] == '.py' or filename[-4:] in ('.pyc', '.pyw'):
             name = filename[:-3]
-            subseq = access.seqstart(name, under=seq)
+            subseq = api.seqstart(name, under=seq)
 
-            access.info("Importing main function from " + name +  "... ")
+            api.info("Importing main function from " + name +  "... ")
             try:
                 r.append((__import__(name, fromlist=["main"]).main, name))
             except AttributeError as e:
-                access.error("\tcould'n find `main` function, abort loading.")
+                api.error("\tcould'n find `main` function, abort loading.")
             else:
-                access.info("\tdone.")
+                api.info("\tdone.")
 
-            access.seqend(subseq)
-    access.seqend(seq)
+            api.seqend(subseq)
+    api.seqend(seq)
 
     os.chdir(prev)
     return r
@@ -63,35 +63,35 @@ def start(registered):
         + Starts the main sequence.
         + Enter the main loop.
     """
-    access.newline()
-    access.info("Seed: " + str(access.settings['randomSeed']) + ".")
-    access.info("(you will need this seed to replay the exact same game...)")
-    access.newline()
+    api.newline()
+    api.info("Seed: " + str(api.settings('randomSeed')) + ".")
+    api.info("(you will need this seed to replay the exact same game...)")
+    api.newline()
 
     for main in registered:
-        s = access.settings['worldSize']
-        x, y = access.RNG.randrange(s), access.RNG.randrange(s)
+        s = api.settings('worldSize')
+        x, y = api.RNG.randrange(s), api.RNG.randrange(s)
         #x, y = world.generate.nextSpanwPosition()
         world.addNest(Queen(x, y, main[0], main[1]).nest)
 
-    loop.mainseq = access.seqstart("game")
+    loop.mainseq = api.seqstart("game")
     loop.counter = 0
 
-    access.info("------------------- Start of simulation -------------------")
+    api.info("------------------- Start of simulation -------------------")
 
-    access.info("Starting GUI.")
+    api.info("Starting GUI.")
     graph.start(loop)
 
 def loop():
     """ Make the `world.turn` then calls `graph.update` with either
         `end` or`loop` depending on `test`.
     """
-    subseq = access.seqstart("turn" + str(loop.counter), under=loop.mainseq)
+    subseq = api.seqstart("turn" + str(loop.counter), under=loop.mainseq)
 
     world.turn()
     graph.update(end if test() else loop)
 
-    access.seqend(subseq)
+    api.seqend(subseq)
 
 def test():
     """ Returns `True` if the simulation should be ended.
@@ -102,25 +102,25 @@ def test():
         this behavior.
     """
     loop.counter+= 1
-    l = access.settings['turnsLimit']
+    l = api.settings('turnsLimit')
     return world.isFinished() or l < loop.counter + 1 and 0 < l
 
 def end():
-    """ End simulation. Also output the seed through `access.info`.
+    """ End simulation. Also output the seed through `api.info`.
     """
     graph.end()
-    access.seqend(loop.mainseq)
+    api.seqend(loop.mainseq)
 
-    access.info("------------------- End of simulation   -------------------")
-    access.newline()
-    access.info("Seed: " + str(access.settings['randomSeed']) + ".")
-    access.info("(you will need this seed to replay the exact same game...)")
+    api.info("------------------- End of simulation   -------------------")
+    api.newline()
+    api.info("Seed: " + str(api.settings('randomSeed')) + ".")
+    api.info("(you will need this seed to replay the exact same game...)")
 
 
 if __name__ == '__main__':
-    access.loadSettings()
+    api.loadSettings()
     graph.load()
 
     world = World().generate()
 
-    start(load(access.settings['playersDirectory']))
+    start(load(api.settings('playersDirectory')))

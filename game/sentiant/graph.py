@@ -14,9 +14,9 @@
    limitations under the License.
 """
 
-import tkinter as tk
+from sentiant.core import api
 
-from sentiant.core import access
+import tkinter as tk
 
 
 EMPTY = 0
@@ -46,12 +46,12 @@ tileSize = 100
 def load():
     global ant, ant_res, res, rock, empty, wallColor, emptyColor
 
-    #ratio = int(250 / (access.settings['windowSize']\
-    #                   /access.settings['worldSize']))
+    #ratio = int(250 / (api.settings('windowSize')\
+    #                   /api.settings('worldSize')))
     global tileSize
-    tileSize = access.settings['tileSize']
+    tileSize = api.settings('tileSize')
     ratio = 250 // tileSize
-    dir = access.settings['texturesDirectory']
+    dir = api.settings('texturesDirectory')
 
     ant     = tk.PhotoImage(file=dir + "ant.png").subsample(ratio)
     ant_res = tk.PhotoImage(file=dir + "ant_res.png").subsample(ratio)
@@ -64,8 +64,8 @@ def load():
             filename = dir + "queen{}{}.png".format(1-j, i)
             queen[i][j] = tk.PhotoImage(file=filename).subsample(ratio)
 
-    wallColor = access.settings['wallColor']
-    emptyColor = access.settings['emptyColor']
+    wallColor = api.settings('wallColor')
+    emptyColor = api.settings('emptyColor')
 
     # configure window
     vsb = tk.Scrollbar(root, orient=tk.VERTICAL)
@@ -85,14 +85,14 @@ def load():
 
     frame = tk.Frame(canvas)
 
-    s = access.settings['worldSize']
+    s = api.settings('worldSize')
     for i in range(s):
         grid.append([])
         for j in range(s):
             b = tk.Label(frame, bg=wallColor, borderwidth=1, image=empty, \
                          text=" ", width=tileSize, height=tileSize, \
                          #command=lambda x=i, y=j: handlePress(x, y), \
-                         fg=access.settings['textColor'], compound=tk.CENTER)
+                         fg=api.settings('textColor'), compound=tk.CENTER)
             b.grid(column=i, row=s-j+1)
             grid[-1].append(b)
 
@@ -123,7 +123,7 @@ def start(mainloop):
     root.mainloop()
 
 def drawQueen(lowerX, lowerY):
-    s = access.settings['worldSize']
+    s = api.settings('worldSize')
     for i in range(2):
         for j in range(2):
             x, y = (lowerX + i) % s, (lowerY + j) % s
@@ -145,10 +145,10 @@ def updateTile(x, y, f, ph):
 def update(next):
     root.update_idletasks()
     root.update()
-    root.after(int(1000 * 100. / access.settings['tickSpeed']), next)
+    root.after(int(1000 * 100. / api.settings('tickSpeed')), next)
 
 def end():
     pass #root.destroy()
 
 def handlePress(x, y):
-    access.info("Pressed: {}, {}.".format(x, y))
+    api.info("Pressed: {}, {}.".format(x, y))

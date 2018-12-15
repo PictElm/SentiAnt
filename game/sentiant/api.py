@@ -57,29 +57,29 @@ EMPTY         = 0
 # You can find description of the settings in the `settings.config` file.
 # As this is a dictionary, you may use the name of a setting as key to get its
 # value.
-settings = {}
+def settings(name):
+    return settings.loaded[name]
 
 def loadSettings(configFile="sentiant/settings.config"):
     """ Loads all the settings from the specified file. Only works once as
         you don't need it in your code! Also set the seed from settings
         (or from `time.time()` if none provided).
     """
-    global settings
-
-    if settings:
+    if 'loaded' in dir(settings):
         return
+    settings.loaded = {}
 
     for it in open(configFile).readlines():
         if it[0] not in (';', '#', '\n'):
             k, v = it.split(':')
             k, v = k.strip(), v.strip()
 
-            settings.update({ k: v[1:-1] if v[0] == '"' and v[-1] == '"' \
-                                  else (float if v[-1] == 'f' else int)(v) })
+            settings.loaded.update({k: v[1:-1] if v[0] == '"' and v[-1] == '"' \
+                                    else (float if v[-1] == 'f' else int)(v)})
 
-    if 'randomSeed' not in settings.keys():
-        settings['randomSeed'] = int(time())
-    RNG.seed(settings['randomSeed'])
+    if 'randomSeed' not in settings.loaded.keys():
+        settings.loaded['randomSeed'] = int(time())
+    RNG.seed(settings.loaded['randomSeed'])
     RNG.seed = lambda *w: warning("You's not supposed to do that!") # trying...
 
 
@@ -103,8 +103,8 @@ class AAnt:
         + `isCarrying`: whether you're carrying a resource.
     """
     def __init__(self, ant, noMem=False):
-        self.x = 0 #settings['viewDistance'] // 2
-        self.y = 0 #settings['viewDistance'] // 2
+        self.x = 0
+        self.y = 0
         self.run = ant.run
         self.color = ant.nest.color
         self.isHurt = ant.isHurt
@@ -187,8 +187,7 @@ def stdout(s, end="\n", start="", seq=False):
         + `[teamname].log` file for what relates to a team.
         (+ `stderr.log`, `[mainseq]/[subseq]/[lastseq].log`, `turn[N].log`, ..)
     """
-    from sentiant.core import access
-    if access.settings['silence']:
+    if settings('silence'):
         return
 
     print(start, end=" ")

@@ -14,8 +14,9 @@
    limitations under the License.
 """
 
-import sentiant.players.api.access as access
-import sentiant.graph as graph
+from sentiant import api
+from sentiant import graph
+
 from sentiant.parts import Ant, Phero
 
 
@@ -24,26 +25,26 @@ class World:
         self.nests = []
         self.pheros = []
 
-        s = access.settings['worldSize']
+        s = api.settings('worldSize')
         self.antT = [[False for k in range(s)] for k in range(s)]
-        self.mapT = [[access.WALL for k in range(s)] for k in range(s)]
+        self.mapT = [[api.WALL for k in range(s)] for k in range(s)]
 
     def generate(self):
-        s = access.settings['worldSize']
+        s = api.settings('worldSize')
 
-        p = access.settings['rocksPercent']
+        p = api.settings('rocksPercent')
         for k in range(int(s * s * p / 100.)):
-            i, j = access.RNG.randrange(s), access.RNG.randrange(s)
-            self[self.mapT, i, j]|= access.ROCK
+            i, j = api.RNG.randrange(s), api.RNG.randrange(s)
+            self[self.mapT, i, j]|= api.ROCK
 
-        a = access.settings['resAmount']
+        a = api.settings('resAmount')
         for k in range(a):
-            i, j = access.RNG.randrange(s), access.RNG.randrange(s)
-            while self[self.mapT, i, j] & access.RESOURCE:
-                i, j = access.RNG.randrange(s), access.RNG.randrange(s)
-            self[self.mapT, i, j]|= access.RESOURCE
-            if self[self.mapT, i, j] & access.ROCK:
-                self[self.mapT, i, j]^= access.ROCK
+            i, j = api.RNG.randrange(s), api.RNG.randrange(s)
+            while self[self.mapT, i, j] & api.RESOURCE:
+                i, j = api.RNG.randrange(s), api.RNG.randrange(s)
+            self[self.mapT, i, j]|= api.RESOURCE
+            if self[self.mapT, i, j] & api.ROCK:
+                self[self.mapT, i, j]^= api.ROCK
 
         return self
 
@@ -52,14 +53,14 @@ class World:
             for j in range(-3, 5):
                 if abs(i-.5) + abs(j-.5) < 5:
                     self[self.mapT, nest.queen.x + i, nest.queen.y + j] = \
-                                                                   access.EMPTY
+                                                                   api.EMPTY
 
         for i, j in nest.queen.around:
-            self[self.mapT, nest.queen.x +i, nest.queen.y +j]|= access.RESOURCE
+            self[self.mapT, nest.queen.x +i, nest.queen.y +j]|= api.RESOURCE
 
         for i in range(2):
             for j in range(2):
-                #self[self.mapT, nest.queen.x+i, nest.queen.y+j]|= access.ROCK
+                #self[self.mapT, nest.queen.x+i, nest.queen.y+j]|= api.ROCK
                 self[self.antT, nest.queen.x + i, nest.queen.y + j] = nest.queen
 
         graph.drawQueen(nest.queen.x, nest.queen.y)
@@ -67,7 +68,7 @@ class World:
         self.nests.append(nest)
 
     def coords(self, x, y):
-        s = access.settings['worldSize']
+        s = api.settings('worldSize')
         if not x in range(s) or not y in range(s):
             return x % s, y % s
         return x, y
@@ -82,13 +83,13 @@ class World:
         if isinstance(self.antT[x][y], Ant):
             flags|= graph.ANT
 
-        if self.mapT[x][y] & access.RESOURCE:
+        if self.mapT[x][y] & api.RESOURCE:
             flags|= graph.RES
 
-        if self.mapT[x][y] & access.WALL:
+        if self.mapT[x][y] & api.WALL:
             flags|= graph.WALL
 
-        if self.mapT[x][y] & access.ROCK:
+        if self.mapT[x][y] & api.ROCK:
             flags|= graph.ROCK
 
         ph, dk = -1, -1
@@ -112,39 +113,39 @@ class World:
             queen = nest.queen
 
             resPos, pheros = queen.createInput(self)
-            aqueen = access.AQueen(queen)
+            aqueen = api.AQueen(queen)
 
             action = queen.run(aqueen, resPos, pheros)
             queen.memory.update(aqueen.memory)
 
-            if action != access.WAIT and ( isinstance(action, tuple) \
+            if action != api.WAIT and ( isinstance(action, tuple) \
                                         or isinstance(action, list) ):
                 posX, posY, cb = action
                 posX, posY = self.coords(posX + queen.x, posY + queen.y)
 
-                if self[self.mapT, posX, posY] & access.RESOURCE:
+                if self[self.mapT, posX, posY] & api.RESOURCE:
                     newAnt = Ant(posX, posY, nest, cb)
                     nest.ants.append(newAnt)
 
-                    self[self.mapT, posX, posY]^= access.RESOURCE
+                    self[self.mapT, posX, posY]^= api.RESOURCE
                     self[self.antT, posX, posY] = newAnt
 
                     # send used resource back to the world
-                    s = access.settings['worldSize']
-                    i, j = access.RNG.randrange(s), access.RNG.randrange(s)
-                    while self[self.mapT, i, j] & access.RESOURCE:
-                        i, j = access.RNG.randrange(s), access.RNG.randrange(s)
-                    self[self.mapT, i, j]|= access.RESOURCE
+                    s = api.settings('worldSize')
+                    i, j = api.RNG.randrange(s), api.RNG.randrange(s)
+                    while self[self.mapT, i, j] & api.RESOURCE:
+                        i, j = api.RNG.randrange(s), api.RNG.randrange(s)
+                    self[self.mapT, i, j]|= api.RESOURCE
 
         beeings = sum([n.ants for n in self.nests], [])
-        access.RNG.shuffle(beeings)
+        api.RNG.shuffle(beeings)
 
         toMove = []
         toHurt = []
 
         for ant in beeings:
             map, ants, phL, onPos = ant.createInput(self)
-            aant, aview = access.AAnt(ant), access.AView(map, ants)
+            aant, aview = api.AAnt(ant), api.AView(map, ants)
 
             action, value = ant.run(aant, aview, phL)
             ant.memory.update(aant.memory)
@@ -153,13 +154,13 @@ class World:
             if isinstance(onPos, Phero):
                 onPos.decay+= 1
 
-                if value == access.REFRESH_PHERO:
+                if value == api.REFRESH_PHERO:
                     onPos.decay = 0
                 elif value in range(16):
                     onPos.x, onPos.y = ant.x, ant.y
                     onPos.decay, onPos.value = 0, value
 
-                if onPos.decay == access.settings['pheroRange']:
+                if onPos.decay == api.settings('pheroRange'):
                     self.pheros.remove(onPos)
                     self[self.mapT, onPos.x, onPos.y]+= 0
 
@@ -170,33 +171,33 @@ class World:
             # grown-up stuff
             if 0 < ant.age or True:
                 # action processing
-                dx, dy = access.asPosition(action)
+                dx, dy = api.asPosition(action)
                 X, Y = self.coords(ant.x + dx, ant.y + dy)
 
-                if action & access.ATTACK_ON and not ant.isCarrying:
+                if action & api.ATTACK_ON and not ant.isCarrying:
                     if self[self.antT, X, Y]:
                         toHurt.append(self[self.antT, X, Y])
 
-                elif action & access.MOVE_TO:
+                elif action & api.MOVE_TO:
                     if not self[self.antT, X, Y] \
-                       and not self[self.mapT, X, Y] & access.WALL:
+                       and not self[self.mapT, X, Y] & api.WALL:
                         toMove.append((ant, X, Y))
                         self[self.antT, X, Y] = ant
 
-                elif action & access.TAKE_RES and not ant.isCarrying \
-                     and self[self.mapT, ant.x, ant.y] & access.RESOURCE:
-                    self[self.mapT, ant.x, ant.y]^= access.RESOURCE
+                elif action & api.TAKE_RES and not ant.isCarrying \
+                     and self[self.mapT, ant.x, ant.y] & api.RESOURCE:
+                    self[self.mapT, ant.x, ant.y]^= api.RESOURCE
                     ant.isCarrying = True
 
-                elif action & access.DROP_RES and ant.isCarrying \
-                     and not self[self.mapT, ant.x, ant.y] & access.RESOURCE:
-                    self[self.mapT, ant.x, ant.y]|= access.RESOURCE
+                elif action & api.DROP_RES and ant.isCarrying \
+                     and not self[self.mapT, ant.x, ant.y] & api.RESOURCE:
+                    self[self.mapT, ant.x, ant.y]|= api.RESOURCE
                     ant.isCarrying = False
 
-                elif action & access.DIG_AT and not ant.isCarrying:
-                    if not self[self.mapT, X, Y] & access.ROCK \
-                       and self[self.mapT, X, Y] & access.WALL:
-                        self[self.mapT, X, Y]^= access.WALL
+                elif action & api.DIG_AT and not ant.isCarrying:
+                    if not self[self.mapT, X, Y] & api.ROCK \
+                       and self[self.mapT, X, Y] & api.WALL:
+                        self[self.mapT, X, Y]^= api.WALL
 
             # others
             ant.x, ant.y = self.coords(ant.x, ant.y)
@@ -206,7 +207,7 @@ class World:
         for ant in toHurt:
             if ant.isHurt:
                 if ant.isCarrying:
-                    self[self.mapT, ant.x, ant.y]|= access.RESOURCE
+                    self[self.mapT, ant.x, ant.y]|= api.RESOURCE
                 self[self.antT, ant.x, ant.y] = False
                 ant.nest.remove(ant)
             else:
