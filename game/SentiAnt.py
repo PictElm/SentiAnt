@@ -39,15 +39,15 @@ def load(dirname):
     for filename in os.listdir():
         if filename[-3:] == '.py' or filename[-4:] in ('.pyc', '.pyw'):
             name = filename[:-3]
-            subseq = api.seqstart(name, under=seq)
+            subseq = api.seqstart(name)
 
             api.info("Importing main function from " + name +  "... ")
             try:
                 r.append((__import__(name, fromlist=["main"]).main, name))
             except AttributeError as e:
-                api.error("\tcould'n find `main` function, abort loading.")
+                api.error("    could'n find `main` function, abort loading.")
             else:
-                api.info("\tdone.")
+                api.info("    done.")
 
             api.seqend(subseq)
     api.seqend(seq)
@@ -64,21 +64,21 @@ def start(registered):
         + Enter the main loop.
     """
     api.newline()
-    api.info("Seed: " + str(api.settings('randomSeed')) + ".")
+    api.info("Seed: " + str(api.settings('randomSeed')))
     api.info("(you will need this seed to replay the exact same game...)")
     api.newline()
 
     graph.makeColorMap([main[1] for main in registered])
-    
+
     for main in registered:
         s = api.settings('worldSize')
         x, y = api.RNG.randrange(s), api.RNG.randrange(s)
         #x, y = world.generate.nextSpanwPosition()
         world.addNest(Queen(x, y, main[0], main[1]).nest)
 
-    loop.mainseq = api.seqstart("game")
     loop.counter = 0
 
+    loop.mainseq = api.seqstart("game")
     api.info("------------------- Start of simulation -------------------")
 
     api.info("Starting GUI.")
@@ -88,7 +88,7 @@ def loop():
     """ Make the `world.turn` then calls `graph.update` with either
         `end` or`loop` depending on `test`.
     """
-    subseq = api.seqstart("turn" + str(loop.counter), under=loop.mainseq)
+    subseq = api.seqstart("turn:" + str(loop.counter), above=loop.mainseq)
 
     world.turn()
     graph.update(end if test() else loop)
@@ -111,18 +111,18 @@ def end():
     """ End simulation. Also output the seed through `api.info`.
     """
     graph.end()
-    api.seqend(loop.mainseq)
 
     api.info("------------------- End of simulation   -------------------")
+    api.seqend(loop.mainseq)
+
     api.newline()
-    api.info("Seed: " + str(api.settings('randomSeed')) + ".")
+    api.info("Seed: " + str(api.settings('randomSeed')))
     api.info("(you will need this seed to replay the exact same game...)")
 
 
 if __name__ == '__main__':
     api.loadSettings()
     graph.load()
-
     world = World().generate()
 
     start(load(api.settings('playersDirectory')))

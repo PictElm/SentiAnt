@@ -79,7 +79,7 @@ class World:
         T[x][y] = v
 
         flags = graph.EMPTY
-        name = ""
+        name = "noname"
 
         if isinstance(self.antT[x][y], Ant):
             flags|= graph.ANT
@@ -93,6 +93,10 @@ class World:
 
         if self.mapT[x][y] & api.ROCK:
             flags|= graph.ROCK
+
+        if T == self.antT and v == None:
+            print(name, x, y, flags & graph.ANT)
+            T[x][y] = False
 
         ph, dk = -1, -1
         for phero in self.pheros:
@@ -112,14 +116,18 @@ class World:
         return False
 
     def turn(self):
+        queensSeq = api.seqstart("queens")
+
         for nest in self.nests:
             queen = nest.queen
 
             resPos, pheros = queen.createInput(self)
             aqueen = api.AQueen(queen)
 
+            queenSeq = api.seqstart(queen.nest.color)
             action = queen.run(aqueen, resPos, pheros)
             queen.memory.update(aqueen.memory)
+            api.seqend(queenSeq)
 
             if action != api.WAIT and ( isinstance(action, tuple) \
                                         or isinstance(action, list) ):
@@ -128,7 +136,7 @@ class World:
 
                 if self[self.mapT, posX, posY] & api.RESOURCE:
                     newAnt = Ant(posX, posY, nest, cb)
-                    nest.ants.append(newAnt)
+                    nest.append(newAnt)
 
                     self[self.mapT, posX, posY]^= api.RESOURCE
                     self[self.antT, posX, posY] = newAnt
@@ -140,6 +148,10 @@ class World:
                         i, j = api.RNG.randrange(s), api.RNG.randrange(s)
                     self[self.mapT, i, j]|= api.RESOURCE
 
+        api.seqend(queensSeq)
+
+        antsSeq = api.seqstart("ants")
+
         beeings = sum([n.ants for n in self.nests], [])
         api.RNG.shuffle(beeings)
 
@@ -150,8 +162,10 @@ class World:
             map, ants, phL, onPos = ant.createInput(self)
             aant, aview = api.AAnt(ant), api.AView(map, ants)
 
+            antSeq = api.seqstart(ant.nest.color + ":" + str(id(ant)))
             action, value = ant.run(aant, aview, phL)
             ant.memory.update(aant.memory)
+            api.seqend(antSeq)
 
             # pheromone processing
             if isinstance(onPos, Phero):
@@ -208,14 +222,20 @@ class World:
             ant.age+= 1
 
         for ant in toHurt:
-            if ant.isHurt:
-                if ant.isCarrying:
-                    self[self.mapT, ant.x, ant.y]|= api.RESOURCE
-                self[self.antT, ant.x, ant.y] = False
-                ant.nest.remove(ant)
-            else:
-                ant.isHurt = True
+            if not ant.isDead:
+                if ant.isHurt:
+                    if ant.isCarrying: # TODO: if there is already a resource.
+                        self[self.mapT, ant.x, ant.y]|= api.RESOURCE
+
+                    self[self.antT, ant.x, ant.y] = None
+                    ant.nest.remove(ant)
+                    ant.isDead = True
+                else:
+                    ant.isHurt = True
 
         for ant, toX, toY in toMove:
-            self[self.antT, ant.x, ant.y] = False
-            ant.x, ant.y = toX, toY
+            if not ant.isDead:
+                self[self.antT, ant.x, ant.y] = False
+                ant.x, ant.y = toX, toY
+
+        api.seqend(antsSeq)

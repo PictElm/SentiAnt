@@ -57,8 +57,8 @@ EMPTY         = 0
 # You can find description of the settings in the `settings.config` file.
 # As this is a dictionary, you may use the name of a setting as key to get its
 # value.
-def settings(name):
-    return settings.loaded[name]
+def settings(name, default=None):
+    return settings.loaded.get(name, default)
 
 def loadSettings(configFile="sentiant/settings.config"):
     """ Loads all the settings from the specified file. Only works once as
@@ -69,15 +69,21 @@ def loadSettings(configFile="sentiant/settings.config"):
         return
     settings.loaded = {}
 
+    def parseValue(v):
+        v = v.strip()
+        if v[0] + v[-1] == '[]':
+            if v[1:-1].strip():
+                return [parseValue(s) for s in v[1:-1].split(",")]
+            return []
+        return v[1:-1] if v[0] + v[-1] == '""' \
+               else (float if v[-1] == 'f' else int)(v)
+
     for it in open(configFile).readlines():
         if it[0] not in (';', '#', '\n'):
             k, v = it.split(':')
-            k, v = k.strip(), v.strip()
+            settings.loaded.update({ k.strip(): parseValue(v) })
 
-            settings.loaded.update({k: v[1:-1] if v[0] == '"' and v[-1] == '"' \
-                                    else (float if v[-1] == 'f' else int)(v)})
-
-    if 'randomSeed' not in settings.loaded.keys():
+    if not settings('randomSeed'):
         settings.loaded['randomSeed'] = int(time())
     RNG.seed(settings.loaded['randomSeed'])
     RNG.seed = lambda *w: warning("You's not supposed to do that!") # trying...
@@ -106,7 +112,7 @@ class AAnt:
         self.x = 0
         self.y = 0
         self.run = ant.run
-        self.color = ant.nest.color
+        self.color = ant.color
         self.isHurt = ant.isHurt
         self.wasHurt = ant.wasHurt
         self.isCarrying = ant.isCarrying
@@ -175,9 +181,6 @@ def asPosition(flags):
     return 0, 0
 
 
-seqname = {}
-seqlast = []
-
 def stdout(s, end="\n", start="", seq=False):
     """ Standard output, you don't need to use it directly.
 
@@ -188,29 +191,29 @@ def stdout(s, end="\n", start="", seq=False):
         (+ `stderr.log`, `[mainseq]/[subseq]/[lastseq].log`, `turn[N].log`, ..)
     """
     out = start + " "
-
-    if seq and seqlast:
-        seq = seqname[seq if seq in seqname.keys() else seqlast[-1]]
-        out+= "<" + seq + "> "
-
+    if seq and Sequence.all:
+        seq = seq if isinstance(seq, Sequence) else Sequence.all[seq]
+        out+= "<" + str(seq) + "> "
     out+= s + end
 
-    if not settings('silence'):
+    if seq and ( not settings('listenTo') \
+                 or any([s in str(seq) for s in settings('listenTo')]) ) \
+       and settings('listenTo') != []:
         print(out, end="")
 
-def info(s, seq=True):
+def info(s, seq=-1):
     """ Use that to output an information. """
     stdout(s, start="[Info]", seq=seq)
 
-def warning(s, seq=True):
+def warning(s, seq=-1):
     """ Use that to output a warning. """
     stdout(s, start="[Warn]", seq=seq)
 
-def error(s, seq=True):
+def error(s, seq=-1):
     """ Use that to output an error. """
     stdout(s, start="[Rror]", seq=seq)
 
-def debug(s, seq=True):
+def debug(s, seq=-1):
     """ Use that to output a debug message. """
     stdout(s, start="[Dbug]", seq=seq)
 
@@ -218,7 +221,41 @@ def newline():
     """ Use that to jump a new (empty) line. """
     stdout("")
 
-def seqstart(name, under=''):
+
+class Sequence():
+    def __init__(self, name, above=None, under=None):
+        self.name = name
+        self.above = above
+        self.under = [] if not under else under
+
+    def info(self, s):
+        """ Use that to output an information. """
+        stdout(s, start="[Info]", seq=self)
+
+    def warning(self, s):
+        """ Use that to output a warning. """
+        stdout(s, start="[Warn]", seq=self)
+
+    def error(self, s):
+        """ Use that to output an error. """
+        stdout(s, start="[Rror]", seq=self)
+
+    def debug(self, s):
+        """ Use that to output a debug message. """
+        stdout(s, start="[Dbug]", seq=self)
+
+    def __str__(self):
+        if self.above:
+            return str(self.above) + "." + self.name
+        return self.name
+
+    def printAllSequences():
+        return "Sequences started:\n" + "\n".join([str(s)for s in Sequence.all])
+
+    all = []
+
+
+def seqstart(name, above=-1):
     """ Sequences allows you to organize your logs.
 
         To start a new sequence, use this function. You may save its outputs
@@ -229,20 +266,20 @@ def seqstart(name, under=''):
         behavior, you can specify the keyword argument `seq=False` in any
         messaging function.
     """
-    if under != '':
-        if under in seqname.keys():
-            under = seqname[under]
-        under+= '.'
+    newseq = Sequence(name)
 
-    seqlast.append(1 if len(seqlast) < 1 else seqlast[-1] + 1)
-    seqname.update({ seqlast[-1]: under + name })
+    if above and Sequence.all:
+        above = above if isinstance(above, Sequence) else Sequence.all[above]
+        newseq.above = above
+        above.under.append(newseq)
 
-    newline()
-    info("started;", seq=seqlast[-1])
+    Sequence.all.append(newseq)
+    #newline()
+    #info("started;", seq=newseq)
 
-    return seqlast[-1]
+    return newseq
 
-def seqend(seq=-1):
+def seqend(seq=-1, endAllSub=True):
     """ Sequences allows you to organize your logs.
 
         To end a (started) sequence, use this function. You should specify
@@ -251,12 +288,17 @@ def seqend(seq=-1):
         will be ended. (Yes, you can lose the master sequence call `game` or
         the sub-sequence `turn[N]`, but you would be running your own logs...)
     """
-    seq = seq if seq in seqname.keys() else seqlast[-1]
+    if not Sequence.all:
+        warning("No sequence in pile!")
+    seq = seq if isinstance(seq, Sequence) else Sequence.all[-1]
 
-    info("ended.", seq=seq)
-    newline()
+    if endAllSub:
+        for sub in seq.under:
+            seqend(sub)
 
-    seqlast.remove(seq)
-    name = seqname.pop(seq)
+    if seq.above:
+        seq.above.under.remove(seq)
 
-    return seqname
+    #info("ended.", seq=seq)
+    #newline()
+    Sequence.all.remove(seq)

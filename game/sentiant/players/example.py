@@ -27,7 +27,7 @@ def main(self, resources, pheromonesList):
         self.memory['antCount'] = 0
 
     # Starting sequences can facilitate debugging.
-    mainseq = _.seqstart(self.color + ".main")
+    mainseq = _.seqstart(self.color + "-main")
 
     _.info("trying to spawn an `antRandom` somewhere...")
 
@@ -46,7 +46,8 @@ def main(self, resources, pheromonesList):
         _.warning("404 - resource not found!")
         r = _.WAIT
 
-    # Ending our main sequence...
+    # Ending our main sequence.
+    # If you forget to do it, it will be ended automatically.
     _.seqend(mainseq)
     return r
 

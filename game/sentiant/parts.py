@@ -25,6 +25,9 @@ class Nest:
 
         self.queen.nest = self
 
+    def append(self, ant):
+        self.ants.append(ant)
+
     def remove(self, ant):
         self.ants.remove(ant)
 
@@ -46,10 +49,10 @@ class Queen:
 
         # creating pheromones list
         for ph in world.pheros:
-            if ph.isInRange(self.x+0, self.y+0) or \
-               ph.isInRange(self.x+0, self.y+1) or \
-               ph.isInRange(self.x+1, self.y+0) or \
-               ph.isInRange(self.x+1, self.y+1):
+            if ph.isInRange(self.x + 0, self.y + 0) or \
+               ph.isInRange(self.x + 0, self.y + 1) or \
+               ph.isInRange(self.x + 1, self.y + 0) or \
+               ph.isInRange(self.x + 1, self.y + 1):
                 rPheros.append(api.APhero(ph, self))
 
         # creating list of available resources around
@@ -65,6 +68,7 @@ class Ant:
     def __init__(self, posX, posY, nest, callback):
         self.run = callback
         self.nest = nest
+        self.color = nest.color
         self.x = posX
         self.y = posY
         self.isHurt = False
@@ -72,6 +76,7 @@ class Ant:
         self.isCarrying = False
         self.age = 0
         self.memory = {}
+        self.isDead = False
 
     def __bool__(self):
         return True
@@ -124,8 +129,8 @@ class Ant:
         return rMap, rAnts, rPheros, rOnPos
 
     def __str__(self):
-        r = "Hello! I'm an ant from team {c}, currently at {x}, {y}."
-        return r.format(c=self.color, x=self.x, y=self.y)
+        r = "Ant from team {c} of id {i}, currently at {x}, {y}."
+        return r.format(c=self.color, x=self.x, y=self.y, i=id(self))
 
 
 class Phero:
