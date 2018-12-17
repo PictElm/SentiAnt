@@ -122,7 +122,8 @@ def end():
 
 if __name__ == '__main__':
     api.loadSettings()
-    graph.load()
-    world = World().generate()
+    world = World()
+    graph.load(world)
+    world.generate()
 
     start(load(api.settings('playersDirectory')))

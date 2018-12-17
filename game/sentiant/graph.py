@@ -46,7 +46,7 @@ grid = []
 
 tileSize = 100
 
-def load():
+def load(world):
     global ant, ant_res, res, rock, empty, wallColor, emptyColor
 
     #ratio = int(250 / (api.settings('windowSize')\
@@ -97,9 +97,10 @@ def load():
     for i in range(s):
         grid.append([])
         for j in range(s):
-            b = tk.Label(frame, bg=wallColor, borderwidth=1, image=empty, \
-                         text=" ", width=tileSize, height=tileSize, \
-                         fg=api.settings('textColor'), compound=tk.CENTER)
+            b = tk.Button(frame, bg=wallColor, borderwidth=1, image=empty, \
+                          text=" ", width=tileSize, height=tileSize, \
+                          command=lambda x=i, y=j: handlePress(world, x, y), \
+                          fg=api.settings('textColor'), compound=tk.CENTER)
             b.grid(column=i, row=s-j+1)
             grid[-1].append(b)
 
@@ -162,5 +163,8 @@ def update(next):
 def end():
     pass #root.destroy()
 
-def handlePress(x, y):
-    api.info("Pressed: {}, {}.".format(x, y))
+def handlePress(world, x, y):
+    tileInfo = "Pressed: {}, {}.".format(x, y) + "\n"
+    tileInfo+= "\t" + str(world[world.antT, x, y]) + "\n"
+    tileInfo+= "\t" + str(world[world.mapT, x, y]) + "\n"
+    print(tileInfo)

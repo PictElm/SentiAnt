@@ -239,3 +239,9 @@ class World:
                 ant.x, ant.y = toX, toY
 
         api.seqend(antsSeq)
+
+        s = api.settings('worldSize')
+        for i in range(s):
+            for j in range(s):
+                if isinstance(self[self.antT, i, j], Ant):
+                    print(self[self.antT, i, j])

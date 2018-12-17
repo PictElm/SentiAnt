@@ -130,6 +130,8 @@ class Ant:
 
     def __str__(self):
         r = "Ant from team {c} of id {i}, currently at {x}, {y}."
+        if self.isDead:
+            r+= " IM DEAD!"
         return r.format(c=self.color, x=self.x, y=self.y, i=id(self))
 
 
