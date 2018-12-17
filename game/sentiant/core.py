@@ -79,7 +79,7 @@ class World:
         T[x][y] = v
 
         flags = graph.EMPTY
-        name = "noname"
+        name = ""
 
         if isinstance(self.antT[x][y], Ant):
             flags|= graph.ANT
@@ -93,10 +93,6 @@ class World:
 
         if self.mapT[x][y] & api.ROCK:
             flags|= graph.ROCK
-
-        if T == self.antT and v == None:
-            print(name, x, y, flags & graph.ANT)
-            T[x][y] = False
 
         ph, dk = -1, -1
         for phero in self.pheros:
@@ -224,10 +220,13 @@ class World:
         for ant in toHurt:
             if not ant.isDead:
                 if ant.isHurt:
-                    if ant.isCarrying: # TODO: if there is already a resource.
-                        self[self.mapT, ant.x, ant.y]|= api.RESOURCE
+                    if ant.isCarrying:
+                        i, j = ant.x, ant.y
+                        while self[self.mapT, i, j] & api.RESOURCE:
+                            i, j = api.RNG.randint(-4,4), api.RNG.randint(-4,4)
+                        self[self.mapT, i, j]|= api.RESOURCE
 
-                    self[self.antT, ant.x, ant.y] = None
+                    self[self.antT, ant.x, ant.y] = False
                     ant.nest.remove(ant)
                     ant.isDead = True
                 else:
@@ -237,11 +236,7 @@ class World:
             if not ant.isDead:
                 self[self.antT, ant.x, ant.y] = False
                 ant.x, ant.y = toX, toY
+            else:
+                self[self.antT, toX, toY] = False
 
         api.seqend(antsSeq)
-
-        s = api.settings('worldSize')
-        for i in range(s):
-            for j in range(s):
-                if isinstance(self[self.antT, i, j], Ant):
-                    print(self[self.antT, i, j])

@@ -194,7 +194,8 @@ def stdout(s, end="\n", start="", seq=False):
     if seq and Sequence.all:
         seq = seq if isinstance(seq, Sequence) else Sequence.all[seq]
         out+= "<" + str(seq) + "> "
-    out+= s + end
+
+    out+= s.replace("\n", " " * len(out) + "\n") + end
 
     if seq and ( not settings('listenTo') \
                  or any([s in str(seq) for s in settings('listenTo')]) ) \
