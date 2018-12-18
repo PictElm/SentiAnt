@@ -97,6 +97,9 @@ class AQueen:
         self.color = queen.nest.color
         self.memory = {} if noMem else queen.memory
 
+    def __str__(self):
+        return "AQueen(color={c})".format(c=self.color)
+
 
 class AAnt:
     """ A structure that allows you to access:
@@ -119,6 +122,11 @@ class AAnt:
         self.age = ant.age
         self.memory = {} if noMem else ant.memory
 
+    def __str__(self):
+        return "AAnt(x={x}, y={y}, color={c}, carry={C}, hurt={H}, age={a})" \
+                .format(x=self.x, y=self.y, c=self.color, C=self.isCarrying, \
+                        H=self.isHurt, a=self.age)
+
 
 class APhero:
     """ A structure that holds:
@@ -132,6 +140,10 @@ class APhero:
         self.y = phero.y - relateAnt.y
         self.value = phero.value
         self.decay = phero.decay
+
+    def __str__(self):
+        return "APhero(x={x}, y={y}, value={v}, decay={d})".format( \
+                x=self.x, y=self.y, v=self.value, d=self.decay)
 
 
 class AView:
@@ -149,8 +161,10 @@ class AView:
         self.range = range(-self.size // 2, self.size // 2)
 
     def __getitem__(self, xy):
-        x, y = xy
-        return self.view[self.size // 2 + x][self.size // 2 + y]
+        if isinstance(xy, (list, tuple)):
+            x, y = xy
+            return self.view[self.size // 2 + x][self.size // 2 + y]
+        return self.view[xy]
 
     def __iter__(self):
         return iter(self.view)
@@ -180,6 +194,22 @@ def asPosition(flags):
 
     return 0, 0
 
+def asString(flags):
+    """ Translate a directional flag from an actions into a tuple indicating
+        the targeted tile. If no directional flag is found in the inputs,
+        returns (0, 0).
+    """
+    if flags & NORTH:
+        return "North"
+    elif flags & SOUTH:
+        return "South"
+    elif flags & EAST:
+        return "East"
+    elif flags & WEAST:
+        return "Weast"
+
+    return "Not a direction"
+
 
 def stdout(s, end="\n", start="", seq=False):
     """ Standard output, you don't need to use it directly.
@@ -202,21 +232,21 @@ def stdout(s, end="\n", start="", seq=False):
        and settings('listenTo') != []:
         print(out, end="")
 
-def info(s, seq=-1):
+def info(s, end="\n", seq=-1):
     """ Use that to output an information. """
-    stdout(s, start="[Info]", seq=seq)
+    stdout(s, end=end, start="[Info]", seq=seq)
 
-def warning(s, seq=-1):
+def warning(s, end="\n", seq=-1):
     """ Use that to output a warning. """
-    stdout(s, start="[Warn]", seq=seq)
+    stdout(s, end=end, start="[Warn]", seq=seq)
 
-def error(s, seq=-1):
+def error(s, end="\n", seq=-1):
     """ Use that to output an error. """
-    stdout(s, start="[Rror]", seq=seq)
+    stdout(s, end=end, start="[Rror]", seq=seq)
 
-def debug(s, seq=-1):
+def debug(s, end="\n", seq=-1):
     """ Use that to output a debug message. """
-    stdout(s, start="[Dbug]", seq=seq)
+    stdout(s, end=end, start="[Dbug]", seq=seq)
 
 def newline():
     """ Use that to jump a new (empty) line. """
@@ -229,21 +259,21 @@ class Sequence():
         self.above = above
         self.under = [] if not under else under
 
-    def info(self, s):
+    def info(self, s, end="\n"):
         """ Use that to output an information. """
-        stdout(s, start="[Info]", seq=self)
+        stdout(s, end=end, start="[Info]", seq=self)
 
-    def warning(self, s):
+    def warning(self, s, end="\n"):
         """ Use that to output a warning. """
-        stdout(s, start="[Warn]", seq=self)
+        stdout(s, end=end, start="[Warn]", seq=self)
 
-    def error(self, s):
+    def error(self, s, end="\n"):
         """ Use that to output an error. """
-        stdout(s, start="[Rror]", seq=self)
+        stdout(s, end=end, start="[Rror]", seq=self)
 
-    def debug(self, s):
+    def debug(self, s, end="\n"):
         """ Use that to output a debug message. """
-        stdout(s, start="[Dbug]", seq=self)
+        stdout(s, end=end, start="[Dbug]", seq=self)
 
     def __str__(self):
         if self.above:
