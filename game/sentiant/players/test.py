@@ -11,6 +11,9 @@ def main(self, resources, pheroList):
     if not 'antCount' in self.memory.keys():
         self.memory['antCount'] = 0
 
+    if self.memory['antCount'] == 1:
+        return r
+
     for x, y, available in resources:
         if available:
             r = (x, y, antRandom)
@@ -36,6 +39,9 @@ def antRandom(self, view, pheroList):
                end="\n\n")
         self.memory['postponnedAction'] = None
 
+    if self.age == 0:
+        return _.MOVE_TO & self.memory['wasMovingAway'], PH_SPAWN
+
     action = _.WAIT
     direction = None
     phero = _.KEEP_PHERO
@@ -56,8 +62,6 @@ def antRandom(self, view, pheroList):
             ph_spawn.append(p)
         elif p.value in PH_TRAIL:
             ph_trail.append(p)
-
-    _.debug("On my position: " + str(onPos))
 
     moveToPh = None
 
@@ -88,20 +92,20 @@ def antRandom(self, view, pheroList):
                         moveToPh = p
 
     else: # not carrying
-        if ph_spawn:
+        direction = self.memory['wasMovingAway'] if ph_spawn \
+                    else [_.NORTH, _.SOUTH, _.EAST, _.WEAST][_.RNG.randrange(4)]
+
+        if not onPos:
             self.memory['lastTrailPhIndex']+= 1
             self.memory['lastTrailPhIndex']%= len(PH_TRAIL)
-
-            direction = self.memory['wasMovingAway']
             phero = PH_TRAIL[self.memory['lastTrailPhIndex']]
-        else:
-            direction = [_.NORTH, _.SOUTH, _.EAST, _.WEAST][_.RNG.randrange(4)]
 
     if moveToPh:
+        _.debug(moveToPh)
         if moveToPh.x < moveToPh.y:
-            direction = _.NORTH if 0 < nearest.y else _.SOUTH
+            direction = _.NORTH if 0 < moveToPh.y else _.SOUTH
         else:
-            direction = _.EST if 0 < nearest.x else _.WEAST
+            direction = _.EAST if 0 < moveToPh.x else _.WEAST
 
     if direction:
         action = correctMoveTo(self, view, direction)

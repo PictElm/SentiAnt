@@ -225,10 +225,10 @@ def stdout(s, end="\n", start="", seq=False):
         seq = seq if isinstance(seq, Sequence) else Sequence.all[seq]
         out+= "<" + str(seq) + "> "
 
-    out+= s.replace("\n", " " * len(out) + "\n") + end
+    out+= str(s).replace("\n", " " * len(out) + "\n") + end
 
     if seq and ( not settings('listenTo') \
-                 or any([s in str(seq) for s in settings('listenTo')]) ) \
+                 or any([str(s) in str(seq) for s in settings('listenTo')]) ) \
        and settings('listenTo') != []:
         print(out, end="")
 
