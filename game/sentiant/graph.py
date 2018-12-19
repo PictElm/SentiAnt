@@ -136,6 +136,7 @@ def drawQueen(lowerX, lowerY, name):
             grid[x][y].config(image=queen[colorMap[name]][i][j], bg=emptyColor)
 
 def start(mainloop):
+    root.state("zoomed")
     mainloop()
     root.mainloop()
 

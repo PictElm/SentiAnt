@@ -195,9 +195,8 @@ def asPosition(flags):
     return 0, 0
 
 def asString(flags):
-    """ Translate a directional flag from an actions into a tuple indicating
-        the targeted tile. If no directional flag is found in the inputs,
-        returns (0, 0).
+    """ Translate a directional flag from an actions into a string. If no
+        directional flag is found in the inputs, returns "Not a direction".
     """
     if flags & NORTH:
         return "North"
@@ -209,6 +208,16 @@ def asString(flags):
         return "Weast"
 
     return "Not a direction"
+
+def asDirection(flags):
+    """ Extract a directional flag from an actions into a string. If no
+        directional flag is found in the inputs, returns EMPTY.
+    """
+    for d in (NORTH, SOUTH, EAST, WEAST):
+        if flags & d:
+            return d
+
+    return EMPTY
 
 
 def stdout(s, end="\n", start="", seq=False):

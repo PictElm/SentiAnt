@@ -11,8 +11,7 @@ def main(self, resources, pheroList):
     if not 'antCount' in self.memory.keys():
         self.memory['antCount'] = 0
 
-    if self.memory['antCount'] == 1:
-        return r
+    #if self.memory['antCount'] == 1: return r
 
     for x, y, available in resources:
         if available:
@@ -44,10 +43,11 @@ def antRandom(self, view, pheroList):
 
     action = _.WAIT
     direction = None
-    phero = _.KEEP_PHERO
+    phero = _.REFRESH_PHERO
 
     if self.memory['postponnedAction']:
-        action = self.memory['postponnedAction']
+        action = correctMoveTo(self, view,
+                               _.asDirection(self.memory['postponnedAction']))
         self.memory['postponnedAction'] = None
         return action, phero
 
@@ -65,7 +65,7 @@ def antRandom(self, view, pheroList):
 
     moveToPh = None
 
-    if view[0, 0] & _.RESOURCE:
+    if view[0, 0] & _.RESOURCE and not (onPos and onPos.value == PH_SPAWN):
         action = _.TAKE_RES
 
     elif self.isCarrying:
@@ -92,8 +92,8 @@ def antRandom(self, view, pheroList):
                         moveToPh = p
 
     else: # not carrying
-        direction = self.memory['wasMovingAway'] if ph_spawn \
-                    else [_.NORTH, _.SOUTH, _.EAST, _.WEAST][_.RNG.randrange(4)]
+        direction = self.memory['wasMovingAway'] #if ph_spawn \
+                   #else [_.NORTH, _.SOUTH, _.EAST, _.WEAST][_.RNG.randrange(4)]
 
         if not onPos:
             self.memory['lastTrailPhIndex']+= 1
@@ -101,7 +101,6 @@ def antRandom(self, view, pheroList):
             phero = PH_TRAIL[self.memory['lastTrailPhIndex']]
 
     if moveToPh:
-        _.debug(moveToPh)
         if moveToPh.x < moveToPh.y:
             direction = _.NORTH if 0 < moveToPh.y else _.SOUTH
         else:
@@ -122,6 +121,13 @@ def correctMoveTo(ant, view, direction=None):
     if not direction:
         direction = [_.NORTH, _.SOUTH, _.EAST, _.WEAST][_.RNG.randrange(4)]
     targeted = _.asPosition(direction)
+
+    if view[targeted] & _.ROCK:
+        ant.memory['postponnedAction'] = action | direction
+        if direction in (_.NORTH, _.SOUTH):
+            direction = [_.EAST, _.WEAST][_.RNG.randrange(2)]
+        elif direction in (_.EAST, _.WEAST):
+            direction = [_.NORTH, _.SOUTH][_.RNG.randrange(2)]
 
     isWall = view[targeted] & _.WALL
     isAnt = view.isAnt(targeted)
