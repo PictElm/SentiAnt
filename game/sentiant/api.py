@@ -173,7 +173,7 @@ class AView:
         return self.size
 
     def isAnt(self, x, y=None):
-        if not y:
+        if y == None:
             x, y = x
         return self.ants[self.size // 2 + x][self.size // 2 + y]
 
