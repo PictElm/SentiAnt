@@ -25,23 +25,23 @@ class World:
         self.nests = []
         self.pheros = []
 
-        s = api.settings('worldSize')
-        self.antT = [[False for k in range(s)] for k in range(s)]
-        self.mapT = [[api.WALL for k in range(s)] for k in range(s)]
+        w, h = api.settings('worldSize')
+        self.antT = [[False for k in range(h)] for k in range(w)]
+        self.mapT = [[api.WALL for k in range(h)] for k in range(w)]
 
     def generate(self):
-        s = api.settings('worldSize')
+        w, h = api.settings('worldSize')
 
         p = api.settings('rocksPercent')
-        for k in range(int(s * s * p / 100.)):
-            i, j = api.RNG.randrange(s), api.RNG.randrange(s)
+        for k in range(int(w * h * p / 100.)):
+            i, j = api.RNG.randrange(w), api.RNG.randrange(h)
             self[self.mapT, i, j]|= api.ROCK
 
         a = api.settings('resAmount')
         for k in range(a):
-            i, j = api.RNG.randrange(s), api.RNG.randrange(s)
+            i, j = api.RNG.randrange(w), api.RNG.randrange(h)
             while self[self.mapT, i, j] & api.RESOURCE:
-                i, j = api.RNG.randrange(s), api.RNG.randrange(s)
+                i, j = api.RNG.randrange(w), api.RNG.randrange(h)
             self[self.mapT, i, j]|= api.RESOURCE
             if self[self.mapT, i, j] & api.ROCK:
                 self[self.mapT, i, j]^= api.ROCK
@@ -68,9 +68,9 @@ class World:
         self.nests.append(nest)
 
     def coords(self, x, y):
-        s = api.settings('worldSize')
-        if not x in range(s) or not y in range(s):
-            return x % s, y % s
+        w, h = api.settings('worldSize')
+        if not x in range(w) or not y in range(h):
+            return x % w, y % h
         return x, y
 
     def __setitem__(self, Txy, v):
@@ -138,10 +138,10 @@ class World:
                     self[self.antT, posX, posY] = newAnt
 
                     # send used resource back to the world
-                    s = api.settings('worldSize')
-                    i, j = api.RNG.randrange(s), api.RNG.randrange(s)
+                    w, h = api.settings('worldSize')
+                    i, j = api.RNG.randrange(w), api.RNG.randrange(h)
                     while self[self.mapT, i, j] & api.RESOURCE:
-                        i, j = api.RNG.randrange(s), api.RNG.randrange(s)
+                        i, j = api.RNG.randrange(w), api.RNG.randrange(h)
                     self[self.mapT, i, j]|= api.RESOURCE
 
         api.seqend(queensSeq)
@@ -158,7 +158,7 @@ class World:
             map, ants, phL, onPos = ant.createInput(self)
             aant, aview = api.AAnt(ant), api.AView(map, ants)
 
-            antSeq = api.seqstart(ant.nest.color + ":" + str(id(ant)))
+            antSeq = api.seqstart(ant.nest.color + ":" + str(id(ant))[-3:])
             action, value = ant.run(aant, aview, phL)
             ant.memory.update(aant.memory)
             api.seqend(antSeq)

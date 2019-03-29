@@ -143,7 +143,7 @@ class Phero:
         self.value = value
 
     def isInRange(self, posX, posY):
-        s = api.settings('worldSize')
-        a = min(abs(posX - self.x), abs(posX - s - self.x))
-        b = min(abs(posY - self.y), abs(posY - s - self.y))
+        w, h = api.settings('worldSize')
+        a = min(abs(posX - self.x), abs(posX - w - self.x))
+        b = min(abs(posY - self.y), abs(posY - h - self.y))
         return abs(a) + abs(b) < api.settings('pheroRange') - self.decay

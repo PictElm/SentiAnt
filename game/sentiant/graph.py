@@ -90,15 +90,15 @@ def load(world):
 
     frame = tk.Frame(canvas)
 
-    s = api.settings('worldSize')
-    for i in range(s):
+    w, h = api.settings('worldSize')
+    for i in range(w):
         grid.append([])
-        for j in range(s):
+        for j in range(h):
             b = tk.Label(frame, bg=wallColor, borderwidth=1, image=empty, \
                          text=" ", width=tileSize, height=tileSize, \
                          #command=lambda x=i, y=j: handlePress(world, x, y), \
                          fg=api.settings('textColor'), compound=tk.CENTER)
-            b.grid(column=i, row=s-j+1)
+            b.grid(column=i, row=h-j+1)
             grid[-1].append(b)
 
     canvas.create_window(0, 0, window=frame)
@@ -129,10 +129,10 @@ def makeColorMap(names):
         colorMap[names[k]] = colors[k]
 
 def drawQueen(lowerX, lowerY, name):
-    s = api.settings('worldSize')
+    w, h = api.settings('worldSize')
     for i in range(2):
         for j in range(2):
-            x, y = (lowerX + i) % s, (lowerY + j) % s
+            x, y = (lowerX + i) % w, (lowerY + j) % h
             grid[x][y].config(image=queen[colorMap[name]][i][j], bg=emptyColor)
 
 def start(mainloop):
@@ -156,7 +156,10 @@ def updateTile(x, y, f, ph, name):
 def update(next):
     root.update_idletasks()
     root.update()
-    root.after(int(1000 * 100. / api.settings('tickSpeed')), next)
+    if 0 < api.settings('tickSpeed', -1):
+        root.after(int(1000 * 100. / api.settings('tickSpeed')), next)
+    else:
+        root.after(0, next)
 
 def end():
     pass #root.destroy()
