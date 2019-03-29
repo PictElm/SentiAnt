@@ -65,7 +65,8 @@ def antRandom(self, view, pheroList):
 
     moveToPh = None
 
-    if view[0, 0] & _.RESOURCE and not (onPos and onPos.value == PH_SPAWN):
+    if view[0, 0] & _.RESOURCE and not self.isCarrying \
+       and not (onPos and onPos.value == PH_SPAWN):
         action = _.TAKE_RES
 
     elif self.isCarrying:
@@ -92,10 +93,17 @@ def antRandom(self, view, pheroList):
                         moveToPh = p
 
     else: # not carrying
-        direction = self.memory['wasMovingAway'] #if ph_spawn \
-                   #else [_.NORTH, _.SOUTH, _.EAST, _.WEAST][_.RNG.randrange(4)]
+        if ph_spawn:
+            direction = self.memory['wasMovingAway']
+        else:
+            choices = [_.NORTH, _.SOUTH, _.EAST, _.WEAST]
+            choices.remove({ _.NORTH: _.SOUTH, \
+                             _.SOUTH: _.NORTH, \
+                             _.EAST: _.WEAST, \
+                             _.WEAST: _.EAST }[self.memory['wasMovingAway']])
+            direction = choices[_.RNG.randrange(len(choices))]
 
-        if not onPos:
+        if not onPos or onPos.value != PH_SPAWN:
             self.memory['lastTrailPhIndex']+= 1
             self.memory['lastTrailPhIndex']%= len(PH_TRAIL)
             phero = PH_TRAIL[self.memory['lastTrailPhIndex']]
