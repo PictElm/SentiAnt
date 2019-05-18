@@ -24,11 +24,11 @@ def load(dirname):
     """ Load players algorithms.
 
         Try to loads a `main` function form every `.py` or `.pyc` (or even
-        '.pyw', by why would you?) files. If a file lack a `main` function,
+        `.pyw`, by why would you?) files. If a file lack a `main` function,
         it is ignored.
 
         Return a list of `(main, name)` where `name` is the file associated
-        (without '.py'/'.pyc'/'.pyw').
+        (without its file extension).
     """
     loop.world = World()
 
@@ -44,17 +44,22 @@ def load(dirname):
     prev = os.getcwd()
     os.chdir(dirname)
 
+    pkgname = dirname.strip('./').replace('/', '.') + '.'
+
     seq = api.seqstart("loading")
     for filename in os.listdir():
         if filename[-3:] == '.py' or filename[-4:] in ('.pyc', '.pyw'):
             name = filename[:-3]
             subseq = api.seqstart(name)
 
-            api.info("Importing main function from " + name +  "..")
+            api.info("Importing main function from '" + name +  "'..")
             try:
-                r.append((__import__(name, fromlist=["main"]).main, name))
+                r.append((__import__(pkgname + name, fromlist=["main"]).main, \
+                          name))
             except AttributeError as e:
-                api.error("    ..could'n find `main` function, abort loading.")
+                api.error( \
+                    "    ..could'n find `main` function, abort loading. (" \
+                        + str(e) + ")")
             else:
                 api.info("    ..done.")
 
@@ -129,8 +134,10 @@ def end():
 
 
 if __name__ == '__main__':
-    api.loadSettings()
+    if os.path.isdir('./game/'):
+        os.chdir('./game/')
 
+    api.loadSettings()
     start(load(api.settings('playersDirectory')))
 
     input("Press enter to continue. ")

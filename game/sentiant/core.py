@@ -17,7 +17,7 @@
 from sentiant import api
 from sentiant import graph
 
-from sentiant.parts import Ant, Phero
+from sentiant.parts import Queen, Ant, Phero
 
 
 class World:
@@ -60,8 +60,7 @@ class World:
 
         for i in range(2):
             for j in range(2):
-                #self[self.mapT, nest.queen.x+i, nest.queen.y+j]|= api.ROCK
-                self[self.antT, nest.queen.x + i, nest.queen.y + j] = nest.queen
+                self[self.antT, nest.queen.x +i, nest.queen.y +j] = nest.queen
 
         graph.drawQueen(nest.queen.x, nest.queen.y, nest.color)
 
@@ -140,7 +139,9 @@ class World:
                     # send used resource back to the world
                     w, h = api.settings('worldSize')
                     i, j = api.RNG.randrange(w), api.RNG.randrange(h)
-                    while self[self.mapT, i, j] & api.RESOURCE:
+                    while self[self.mapT, i, j] & api.RESOURCE \
+                            or self[self.mapT, i, j] & api.ROCK \
+                            or isinstance(self[self.antT, i, j], Queen):
                         i, j = api.RNG.randrange(w), api.RNG.randrange(h)
                     self[self.mapT, i, j]|= api.RESOURCE
 

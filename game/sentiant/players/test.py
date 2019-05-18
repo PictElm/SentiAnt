@@ -10,7 +10,7 @@ DIR_PRP = { _.NORTH: [_.EAST, _.WEAST], _.SOUTH: [_.EAST, _.WEAST], \
 DIR_OPP = { _.NORTH: _.SOUTH, _.SOUTH: _.NORTH, \
             _.EAST: _.WEAST, _.WEAST: _.EAST }
 
-def main(self, resources, pheroList):
+def main_lock(self, resources, pheroList):
     r = False
 
     if not 'antCount' in self.memory.keys():
@@ -107,7 +107,7 @@ def testAnt(self, view, pheroList):
             direction = _.EAST if 0 < moveToPh.x else _.WEAST
 
     if direction:
-        action = correctMoveTo(self, view, direction)
+        action = correctMoveTo(self, view, phero, phOnPos,pheroList, direction)
 
     if self.isCarrying and not action & _.MOVE_TO:
         self.memory['postponnedAction'] = action
@@ -116,14 +116,14 @@ def testAnt(self, view, pheroList):
     return action, phero
 
 
-def correctMoveTo(ant, view, direction=None):
+def correctMoveTo(self, view, phero, phOnPos, pheroList, direction=None):
     action = _.MOVE_TO
     if not direction:
         direction = [_.NORTH, _.SOUTH, _.EAST, _.WEAST][_.RNG.randrange(4)]
     targeted = _.asPosition(direction)
 
     if view[targeted] & _.ROCK:
-        ant.memory['postponnedAction'] = action | direction
+        self.memory['postponnedAction'] = action | direction
         if direction in (_.NORTH, _.SOUTH):
             direction = [_.EAST, _.WEAST][_.RNG.randrange(2)]
         elif direction in (_.EAST, _.WEAST):

@@ -103,7 +103,7 @@ class Ant:
         for i in range(s):
             for j in range(s) if i in [0, s - 1] else [0, s - 1]:
                 if (i, j) == (hs, hs):
-                    r[i][j] = world[world.mapT, self.x, self.y]
+                    rMap[i][j] = world[world.mapT, self.x, self.y]
                     continue
 
                 l = abs(i - hs) + abs(j - hs)
@@ -120,7 +120,7 @@ class Ant:
                         rMap[c][d] = api.UNKNOWN if bla else tile
                         if world[world.antT, a, b]:
                             rAnts[c][d] = (api.AAnt if \
-                                           isinstance(world[world.antT, a, b], \
+                                           isinstance(world[world.antT, a,b], \
                                                       Ant) else api.AQueen) \
                                           (world[world.antT, a, b], noMem=True)
 

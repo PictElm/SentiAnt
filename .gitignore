@@ -1,2 +1,4 @@
 *.pyc
 *.lock
+.vscode/
+__pycache__/

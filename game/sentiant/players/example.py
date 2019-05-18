@@ -172,4 +172,4 @@ def describeIntents(action, phero):
     elif phero in range(16):
         PtoS = "apply a " + str(phero) + " pheromone"
 
-    return "I will " + AtoS + " after I've " + PtoS + "."
+    return "I will " + AtoS + " after I " + PtoS + "."

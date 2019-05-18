@@ -6,7 +6,7 @@ The only part of the game's files you may want to understand is the `access.py`:
 
 ## TL;DR
 
-Your file have a `main` function, `Queen` executes this function with for inputs: **itself**, **resources around** and **pheromones detected**. If you return coordinates from the **resources around** argument along with a **callback function**, you can create an `Ant`. This newly created ant will, as any previous, use its attributed **callback function** with for inputs: **itself**, **its view** and **pheromones detected**. You may return an **action** and a **pheromone**.
+Your file have a `main` function, `Queen` executes this function with for inputs: **itself**, **resources around** and **pheromones detected**. If you return coordinates from the **resources around** argument along with a **call-back function**, you can create an `Ant`. This newly created ant will, as any previous, use its attributed **call-back function** with for inputs: **itself**, **its view** and **pheromones detected**. You may return an **action** and a **pheromone**.
 
 You may also want to know that `NORTH` is `(x, y + 1)` and `EAST` is `(x + 1, y)`.
 If you've fully understood, the following can be repetitive.
@@ -39,7 +39,7 @@ Using a **directional actions** requires you to give a **direction** in `NORTH`,
 
 + `TAKE_RES` to take a resource lying on your tile;
 + `DROP_RES` to let go of a carried resource;
-+ `WAIT` to win immediately (jk, what do _you_ think this will do?).
++ `WAIT` to win immediately (what do _you_ think this will do?).
 
 ## Pheromones
 
@@ -56,7 +56,7 @@ Using a **directional actions** requires you to give a **direction** in `NORTH`,
 
 `Ant`s are the only kind of units, in that all `Ant`s spawned share the same characteristics.
 
-When you create an `Ant`, you must supply a callback `run` function with for inputs:
+When you create an `Ant`, you must supply a call-back `run` function with for inputs:
 
 + An `AAnt` object: this is a class wrapper design to allow you access to properties of you ant, but at the same time to prevent you from affecting their values.
 + The field of view of your ant as a grid, or rather an `AView` object, which size is defined in the settings.
@@ -66,7 +66,7 @@ When you create an `Ant`, you must supply a callback `run` function with for inp
 
 The `Queen` is a special static unit used to produce units: therefore its only output available are `access.WAIT` or `(x, y, callback)` to spawn a new ant following `callback`'s algorithm.
 
-The `run` callback function of a `Queen` is loaded from the file you provided: it's the mandatory `main` function. Its inputs are:
+The `run` call-back function of a `Queen` is loaded from the file you provided: it's the mandatory `main` function. Its inputs are:
 
 + An `AQueen` object, in the same idea as `AAnt`.
 + A list of tuples `(x, y, available)` where `x` and `y` are coordinate relative to the queen's lower position, and `available` is a boolean indicating whether there is a resources on the tile.
@@ -74,7 +74,7 @@ The `run` callback function of a `Queen` is loaded from the file you provided: i
 
 In the `world.tick` function, all queen's `run` are called before any ant move.
 
-In order to spawn a new ant, return the relatives coordinate of the selected resource around it (from the given position list), along with the callback function to associate with the new unit.
+In order to spawn a new ant, return the relatives coordinate of the selected resource around it (from the given position list), along with the call-back function to associate with the new unit.
 
 ### the `Phero`s
 

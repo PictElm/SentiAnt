@@ -60,7 +60,7 @@ EMPTY         = 0
 def settings(name, default=None):
     return settings.loaded.get(name, default)
 
-def loadSettings(configFile="sentiant/settings.config"):
+def loadSettings(configFile="./sentiant/settings.config"):
     """ Loads all the settings from the specified file. Only works once as
         you don't need it in your code! Also set the seed from settings
         (or from `time.time()` if none provided).
@@ -103,8 +103,8 @@ class AQueen:
 
 class AAnt:
     """ A structure that allows you to access:
-        + `x` and `y`: position in the `AView` object... you don't need it, it's
-            always centered on you;
+        + `x` and `y`: position in the `AView` object... you don't need it, as
+            it's always centered on you;
         + `run`: the same function you using;
         + `color`: you color... (although don't expect this to stick around in
             futures versions!);
@@ -289,8 +289,9 @@ class Sequence():
             return str(self.above) + "." + self.name
         return self.name
 
+    @staticmethod
     def printAllSequences():
-        return "Sequences started:\n" + "\n".join([str(s)for s in Sequence.all])
+        return "Sequences started:\n" +"\n".join([str(s)for s in Sequence.all])
 
     all = []
 
